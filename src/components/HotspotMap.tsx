@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CircleMarker, GeoJSON, MapContainer, Rectangle, TileLayer, useMapEvents } from 'react-leaflet';
+import { CircleMarker, GeoJSON, MapContainer, Rectangle, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import type { LatLngBounds } from 'leaflet';
 import type { FeatureCollection, Geometry } from 'geojson';
 import { PALETTES } from '../lib/colors';
@@ -15,6 +15,7 @@ type HotspotMapProps = {
   boroughs?: FeatureCollection<Geometry, BoroughProperties> | null;
   selectedCell: HotspotCell | null;
   onSelectCell: (cell: HotspotCell) => void;
+  onDrillDown?: (cell: HotspotCell) => void;
 };
 
 const londonCenter: [number, number] = [51.5074, -0.1278];
@@ -36,6 +37,72 @@ const ViewWatcher = ({
   return null;
 };
 
+type CellLayerProps = {
+  cells: HotspotCell[];
+  breaks: number[];
+  palette: readonly string[];
+  maxCount: number;
+  selectedCell: HotspotCell | null;
+  onSelectCell: (cell: HotspotCell) => void;
+  onDrillDown?: (cell: HotspotCell) => void;
+};
+
+const CellLayer = ({
+  cells,
+  breaks,
+  palette,
+  maxCount,
+  selectedCell,
+  onSelectCell,
+  onDrillDown,
+}: CellLayerProps) => {
+  const map = useMap();
+
+  const handleClick = (cell: HotspotCell) => {
+    const zoom = map.getZoom();
+    if (zoom >= 13) {
+      onSelectCell(cell);
+      onDrillDown?.(cell);
+    } else {
+      onSelectCell(cell);
+      map.flyToBounds(cell.bounds, {
+        padding: [48, 48],
+        maxZoom: 13,
+        duration: 0.8,
+      });
+    }
+  };
+
+  return (
+    <>
+      {cells.map((cell) => (
+        <CircleMarker
+          key={cell.id}
+          center={cell.center}
+          radius={scaleRadius(cell.count, maxCount)}
+          pathOptions={{
+            color: selectedCell?.id === cell.id ? '#ffe2a3' : 'rgba(255, 246, 232, 0.78)',
+            weight: selectedCell?.id === cell.id ? 2 : 0.8,
+            fillOpacity: selectedCell?.id === cell.id ? 0.95 : 0.76,
+            fillColor: paletteForValue(cell.count, breaks, palette),
+          }}
+          eventHandlers={{ click: () => handleClick(cell) }}
+        />
+      ))}
+      {selectedCell && (
+        <Rectangle
+          bounds={selectedCell.bounds}
+          pathOptions={{
+            color: '#ffe2a3',
+            weight: 1.8,
+            fillOpacity: 0,
+          }}
+        />
+      )}
+    </>
+  );
+};
+
 const HotspotMap = ({
   payload,
   selectedType,
@@ -43,6 +110,7 @@ const HotspotMap = ({
   boroughs,
   selectedCell,
   onSelectCell,
+  onDrillDown,
 }: HotspotMapProps) => {
   const [viewBounds, setViewBounds] = useState<LatLngBounds | null>(null);
   const [zoom, setZoom] = useState(10);
@@ -92,31 +160,15 @@ const HotspotMap = ({
             />
           ) : null}
 
-          {cells.map((cell) => (
-            <CircleMarker
-              key={cell.id}
-              center={cell.center}
-              radius={scaleRadius(cell.count, maxCount)}
-              pathOptions={{
-                color: selectedCell?.id === cell.id ? '#ffe2a3' : 'rgba(255, 246, 232, 0.78)',
-                weight: selectedCell?.id === cell.id ? 2 : 0.8,
-                fillOpacity: selectedCell?.id === cell.id ? 0.95 : 0.76,
-                fillColor: paletteForValue(cell.count, breaks, palette),
-              }}
-              eventHandlers={{ click: () => onSelectCell(cell) }}
-            />
-          ))}
-
-          {selectedCell ? (
-            <Rectangle
-              bounds={selectedCell.bounds}
-              pathOptions={{
-                color: '#ffe2a3',
-                weight: 1.8,
-                fillOpacity: 0,
-              }}
-            />
-          ) : null}
+          <CellLayer
+            cells={cells}
+            breaks={breaks}
+            palette={palette}
+            maxCount={maxCount}
+            selectedCell={selectedCell}
+            onSelectCell={onSelectCell}
+            onDrillDown={onDrillDown}
+          />
         </MapContainer>
 
         <div className="map-overlay map-overlay--legend">

@@ -1,9 +1,8 @@
-import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import HomePage from '../pages/home/HomePage';
 import IntroductionPage from '../pages/introduction/IntroductionPage';
-import BoroughCrimeSituationPage from '../pages/borough-crime-situation/BoroughCrimeSituationPage';
-import RecentIncidentsPage from '../pages/recent-incidents/RecentIncidentsPage';
+import CrimeMapDashboard from '../pages/crime-map-dashboard/CrimeMapDashboard';
 import MappingVulnerabilityPage from '../pages/mapping-vulnerability/MappingVulnerabilityPage';
 import CrimeInequalityPage from '../pages/crime-inequality/CrimeInequalityPage';
 import PriorityPlacesPage from '../pages/priority-places/PriorityPlacesPage';
@@ -12,8 +11,7 @@ import AboutPage from '../pages/about/AboutPage';
 const navigation = [
   { to: '/', label: 'Home' },
   { to: '/introduction', label: 'Introduction' },
-  { to: '/borough-crime-situation', label: 'Borough Crime' },
-  { to: '/recent-incidents', label: 'Hotspots' },
+  { to: '/crime-map', label: 'Crime Map' },
   { to: '/mapping-vulnerability', label: 'Vulnerability' },
   { to: '/crime-and-inequality', label: 'Overlap' },
   { to: '/priority-places', label: 'Priority Places' },
@@ -60,9 +58,10 @@ const App = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/introduction" element={<IntroductionPage />} />
-          <Route path="/borough-crime-situation" element={<BoroughCrimeSituationPage />} />
-          <Route path="/crime-overview" element={<BoroughCrimeSituationPage />} />
-          <Route path="/recent-incidents" element={<RecentIncidentsPage />} />
+          <Route path="/crime-map" element={<CrimeMapDashboard />} />
+          <Route path="/borough-crime-situation" element={<Navigate to="/crime-map" replace />} />
+          <Route path="/crime-overview" element={<Navigate to="/crime-map" replace />} />
+          <Route path="/recent-incidents" element={<Navigate to="/crime-map" replace />} />
           <Route path="/mapping-vulnerability" element={<MappingVulnerabilityPage />} />
           <Route path="/crime-and-inequality" element={<CrimeInequalityPage />} />
           <Route path="/priority-places" element={<PriorityPlacesPage />} />

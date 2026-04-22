@@ -11,7 +11,7 @@ from typing import Any, Dict, Iterable, List, Tuple
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = Path(
-    os.environ.get("CASA0029_SOURCE_DIR", r"F:\UCL\0029group_test\data")
+    os.environ.get("CASA0029_SOURCE_DIR", PROJECT_ROOT / "data")
 )
 OUTPUT_ROOT = PROJECT_ROOT / "public" / "data"
 INCIDENT_OUTPUT = OUTPUT_ROOT / "incidents"
@@ -68,6 +68,16 @@ def load_nomis_table(path: Path) -> List[Dict[str, str]]:
         if row and any((value or "").strip() for value in row.values()):
             rows.append({(key or "").strip(): (value or "").strip() for key, value in row.items()})
     return rows
+
+
+def load_plain_csv(path: Path) -> List[Dict[str, str]]:
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        return [
+            {(key or "").strip(): (value or "").strip() for key, value in row.items()}
+            for row in reader
+            if row and any((value or "").strip() for value in row.values())
+        ]
 
 
 def quantile(values: List[float], proportion: float) -> float:
@@ -146,6 +156,34 @@ def month_key_to_label(month_key: str) -> str:
         "Dec",
     ]
     return f"{names[month - 1]} {year}"
+
+
+MONTH_NAME_TO_NUMBER = {
+    "Jan": 1,
+    "Feb": 2,
+    "Mar": 3,
+    "Apr": 4,
+    "May": 5,
+    "Jun": 6,
+    "Jul": 7,
+    "Aug": 8,
+    "Sep": 9,
+    "Oct": 10,
+    "Nov": 11,
+    "Dec": 12,
+}
+
+
+def short_month_key(value: str) -> str:
+    month_text, year_text = value.strip().split("-")
+    year = 2000 + int(year_text)
+    month = MONTH_NAME_TO_NUMBER[month_text]
+    return f"{year}{month:02d}"
+
+
+def short_month_label(value: str) -> str:
+    month_text, year_text = value.strip().split("-")
+    return f"{month_text} 20{year_text}"
 
 
 def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Dict[str, str]]]:
@@ -632,6 +670,85 @@ def build_incident_assets(lsoa_lookup: Dict[str, Dict[str, str]]) -> Dict[str, A
     }
 
 
+def build_background_chart_assets() -> Dict[str, Any]:
+    borough_geojson = read_json(SOURCE_ROOT / "Final_Borough_Map.geojson")
+    month_keys = sorted(
+        key
+        for key in borough_geojson["features"][0]["properties"]
+        if key.startswith("2024") or key.startswith("2025")
+    )
+
+    recorded_crime = []
+    for month_key in month_keys:
+        total = sum(
+            to_float(feature["properties"].get(month_key)) or 0
+            for feature in borough_geojson["features"]
+        )
+        recorded_crime.append(
+            {
+                "key": month_key,
+                "label": month_key_to_label(month_key),
+                "value": int(total),
+            }
+        )
+
+    borough_change = []
+    for feature in borough_geojson["features"]:
+        props = feature["properties"]
+        total_2024 = sum(to_float(props.get(f"2024{month:02d}")) or 0 for month in range(1, 13))
+        total_2025 = sum(to_float(props.get(f"2025{month:02d}")) or 0 for month in range(1, 13))
+        change = ((total_2025 - total_2024) / total_2024) * 100 if total_2024 else None
+        if change is not None:
+            borough_change.append(
+                {
+                    "name": props["NAME"],
+                    "value": round(change, 2),
+                    "total2024": int(total_2024),
+                    "total2025": int(total_2025),
+                }
+            )
+    borough_change.sort(key=lambda item: item["value"])
+
+    confidence_rows = load_plain_csv(SOURCE_ROOT / "public-perception-data.csv")
+    confidence_measure = "Police do a good job in the local area"
+    confidence = [
+        {
+            "key": short_month_key(row["date"]),
+            "label": short_month_label(row["date"]),
+            "value": round_safe(to_float(row["proportion"]), 1),
+        }
+        for row in confidence_rows
+        if row.get("measure") == confidence_measure and to_float(row.get("proportion")) is not None
+    ]
+    confidence.sort(key=lambda item: item["key"])
+
+    strength_rows = load_plain_csv(SOURCE_ROOT / "Police_Force_Strength.csv")
+    police_strength = []
+    for row in strength_rows:
+        officer = to_float(row.get("Police Officer Strength"))
+        staff = to_float(row.get("Police Staff Strength"))
+        pcso = to_float(row.get("PCSO Strength"))
+        if officer is None or staff is None or pcso is None:
+            continue
+        police_strength.append(
+            {
+                "key": short_month_key(row["Date"]),
+                "label": short_month_label(row["Date"]),
+                "policeOfficerStrength": int(officer),
+                "policeStaffStrength": int(staff),
+                "pcsoStrength": int(pcso),
+            }
+        )
+    police_strength.sort(key=lambda item: item["key"])
+
+    return {
+        "recordedCrime": recorded_crime,
+        "boroughChange": borough_change,
+        "policeConfidence": confidence,
+        "policeForceStrength": police_strength,
+    }
+
+
 def main() -> None:
     ensure_dirs()
     structural_geojson, structural_summary, lsoa_lookup = build_structural_geojson()
@@ -639,9 +756,11 @@ def main() -> None:
         structural_summary["boroughPopulation"], lsoa_lookup
     )
     hotspot_summary = build_incident_assets(lsoa_lookup)
+    background_charts = build_background_chart_assets()
 
     write_json(OUTPUT_ROOT / "lsoa.geojson", structural_geojson)
     write_json(OUTPUT_ROOT / "boroughs.geojson", borough_geojson)
+    write_json(OUTPUT_ROOT / "backgroundCharts.json", background_charts)
     write_json(
         OUTPUT_ROOT / "summary.json",
         {

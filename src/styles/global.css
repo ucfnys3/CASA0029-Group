@@ -1633,6 +1633,379 @@ select {
   color: rgba(255, 250, 243, 0.56);
 }
 
+.introduction-page {
+  width: min(1560px, calc(100vw - 2rem));
+}
+
+.intro-page-heading {
+  padding: clamp(1.6rem, 3.6vw, 3.4rem) 0 clamp(1.3rem, 2.8vw, 2.4rem);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.intro-page-heading__label,
+.intro-narrative-copy span,
+.intro-theory-section__header span {
+  display: inline-block;
+  margin: 0 0 0.85rem;
+  color: rgba(243, 197, 106, 0.9);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.intro-page-heading h1 {
+  margin: 0;
+  color: #fff8ed;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: clamp(2.4rem, 4.5vw, 4rem);
+  line-height: 0.96;
+  letter-spacing: -0.045em;
+}
+
+.intro-page-heading p {
+  max-width: 980px;
+  margin: clamp(1rem, 2vw, 1.55rem) 0 0;
+  color: rgba(255, 238, 206, 0.82);
+  font-size: clamp(1.02rem, 1.35vw, 1.26rem);
+  line-height: 1.72;
+}
+
+.intro-narrative-row {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.2rem, 2.2vw, 1.8rem);
+  padding: clamp(1.4rem, 3vw, 2.5rem) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.intro-narrative-row--response {
+  /* flex-column — DOM order: charts first, then explanation text */
+}
+
+.intro-narrative-copy {
+  max-width: 860px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  padding: clamp(1.35rem, 2vw, 2rem);
+  background:
+    radial-gradient(circle at 8% 4%, rgba(230, 162, 58, 0.14), transparent 34%),
+    linear-gradient(145deg, rgba(26, 29, 39, 0.9), rgba(12, 13, 19, 0.96));
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+}
+
+.intro-narrative-copy h2,
+.intro-theory-section__header h2 {
+  margin: 0 0 0.75rem;
+  color: #fff8ed;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: clamp(1.7rem, 2.4vw, 2.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.intro-narrative-copy p,
+.intro-theory-section__header p,
+.intro-theory-card p {
+  margin: 0 0 0.65rem;
+  color: rgba(255, 238, 206, 0.76);
+  font-size: 1rem;
+  line-height: 1.72;
+}
+
+.intro-chart-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.intro-source-list {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1.2rem;
+}
+
+.intro-source-list a,
+.intro-theory-card a {
+  color: #ffd56f;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.intro-source-list a:hover,
+.intro-theory-card a:hover {
+  color: #fff4c6;
+}
+
+.intro-theory-section {
+  padding: clamp(1.4rem, 3.4vw, 3rem) 0;
+}
+
+.intro-theory-section__header {
+  max-width: 1040px;
+  margin-bottom: 1.3rem;
+}
+
+.intro-theory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.intro-theory-card {
+  min-height: 260px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 26px;
+  padding: 1.4rem;
+  background:
+    linear-gradient(160deg, rgba(29, 33, 44, 0.94), rgba(14, 15, 22, 0.96));
+  box-shadow: 0 20px 58px rgba(0, 0, 0, 0.26);
+}
+
+.intro-theory-card h3 {
+  margin: 0 0 0.5rem;
+  color: #fff8ed;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+.intro-wide-hero {
+  padding: clamp(1.8rem, 4.4vw, 4.2rem) 0 clamp(1.2rem, 3vw, 2.6rem);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.intro-wide-hero__label {
+  margin: 0 0 1rem;
+  color: rgba(243, 197, 106, 0.9);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.intro-wide-hero h1 {
+  max-width: 1420px;
+  margin: 0;
+  color: #fff8ed;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: clamp(4.4rem, 8vw, 9.8rem);
+  line-height: 0.82;
+  letter-spacing: -0.065em;
+}
+
+.intro-wide-hero__copy {
+  display: grid;
+  max-width: 920px;
+  gap: 0.85rem;
+  margin-top: clamp(1.2rem, 2.6vw, 2rem);
+}
+
+.intro-wide-hero__copy p {
+  margin: 0;
+  color: rgba(255, 238, 206, 0.86);
+  font-size: clamp(1rem, 1.25vw, 1.25rem);
+  line-height: 1.7;
+}
+
+.gov-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.35rem;
+}
+
+.gov-chart-card {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 8% 5%, rgba(255, 122, 69, 0.12), transparent 30%),
+    linear-gradient(160deg, rgba(24, 28, 38, 0.96), rgba(10, 12, 18, 0.98));
+  color: rgba(255, 246, 232, 0.9);
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.32);
+  padding: 1.2rem 1.25rem 1rem;
+  overflow: hidden;
+}
+
+.gov-chart-card__info {
+  position: absolute;
+  top: 1rem;
+  right: 1.15rem;
+  color: rgba(255, 255, 255, 0.2);
+  font-family: Georgia, serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.gov-chart-card h3 {
+  margin: 0;
+  color: #fff8ed;
+  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  font-size: clamp(1.08rem, 1.5vw, 1.35rem);
+  font-weight: 800;
+  text-align: left;
+}
+
+.gov-chart-card__legend {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 1rem 0 0.15rem 4.2rem;
+  color: rgba(255, 238, 206, 0.72);
+  font-size: 0.9rem;
+}
+
+.gov-chart-card__legend > span:first-child {
+  display: inline-block;
+  width: 34px;
+  height: 3px;
+}
+
+.gov-chart-card__legend--multi {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-left: 4.2rem;
+}
+
+.gov-chart-card__legend--multi span {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.gov-chart-card__legend--multi i {
+  display: inline-block;
+  width: 34px;
+  height: 3px;
+}
+
+.gov-chart-card svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.gov-chart-card__grid {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+}
+
+.gov-chart-card__axis,
+.gov-chart-card__borough-label {
+  fill: #777f86;
+  fill: rgba(255, 238, 206, 0.58);
+  font-size: 16px;
+}
+
+.gov-chart-card__borough-label {
+  font-size: 12px;
+}
+
+.gov-chart-card__axis-label {
+  fill: rgba(255, 238, 206, 0.62);
+  font-size: 18px;
+}
+
+.gov-chart-card__line {
+  fill: none;
+  stroke: #ff7a45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.gov-chart-card__dot {
+  fill: #ff7a45;
+  opacity: 0.72;
+  transition:
+    r 160ms ease,
+    opacity 160ms ease;
+}
+
+.gov-chart-card__dot--selected {
+  opacity: 1;
+  stroke: #fff8ed;
+  stroke-width: 2.5;
+}
+
+.gov-chart-card__bar {
+  fill: #ff7a45;
+  opacity: 0.82;
+  transition:
+    opacity 160ms ease,
+    filter 160ms ease;
+}
+
+.gov-chart-card__bar--selected {
+  opacity: 1;
+  filter: drop-shadow(0 0 8px rgba(255, 122, 69, 0.48));
+}
+
+.gov-chart-card__focus-line {
+  stroke: rgba(255, 248, 237, 0.75);
+  stroke-dasharray: 5 5;
+  stroke-width: 1.2;
+  opacity: 0.55;
+}
+
+.gov-chart-card__focus-ring {
+  fill: transparent;
+  stroke: #ffb36b;
+  stroke-width: 2;
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.gov-chart-card__hit {
+  fill: transparent;
+  cursor: crosshair;
+  outline: none;
+}
+
+.gov-chart-card__hit:focus-visible {
+  stroke: #fff8ed;
+  stroke-width: 2;
+}
+
+.gov-chart-card__readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3rem;
+  margin: 0.4rem 0 0 3.9rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 238, 206, 0.66);
+  font-size: 0.92rem;
+}
+
+.gov-chart-card__readout strong {
+  color: #fff8ed;
+  font-size: 1.1rem;
+}
+
+.gov-chart-card__readout small {
+  color: rgba(255, 238, 206, 0.56);
+  font-size: 0.82rem;
+}
+
+.gov-chart-card__readout--multi {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  gap: 0.25rem;
+}
+
+.gov-chart-card__readout--multi strong {
+  font-size: 0.92rem;
+}
+
 /* Page-specific dashboard fixes: keep each map in a complete frame. */
 .borough-dashboard,
 .hotspot-dashboard {
@@ -1677,6 +2050,7 @@ select {
 @media (max-width: 1120px) {
   .home-hero,
   .chapter-hero,
+  .intro-wide-hero,
   .background-layout,
   .borough-dashboard__header,
   .borough-dashboard__main,
@@ -1688,7 +2062,12 @@ select {
   .intro-blocks,
   .story-grid,
   .panel-grid,
-  .about-grid {
+  .about-grid,
+  .intro-chart-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .gov-chart-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1761,6 +2140,24 @@ select {
     font-size: clamp(3.1rem, 15vw, 5.4rem);
   }
 
+  .intro-wide-hero {
+    padding: 1.4rem;
+  }
+
+  .intro-wide-hero h1 {
+    font-size: clamp(2.7rem, 15vw, 5.4rem);
+  }
+
+  .gov-chart-card {
+    min-height: 320px;
+    padding: 1rem 0.8rem 0.45rem;
+  }
+
+  .gov-chart-card__legend,
+  .gov-chart-card__legend--multi {
+    margin-left: 2.6rem;
+  }
+
   .cover-page__caption {
     position: static;
     display: grid;
@@ -1827,3 +2224,386 @@ select {
     display: none;
   }
 }
+
+/* ============================================================
+   Crime Map Dashboard (.crime-map-dashboard / .cmd__*)
+   ============================================================ */
+
+.crime-map-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  padding-bottom: 2.5rem;
+}
+
+/* Header: 3-column grid — title | mode toggle | stat strip */
+.cmd__header {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto minmax(300px, auto);
+  gap: 1rem;
+  align-items: end;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cmd__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.cmd__kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.crime-map-dashboard h1 {
+  margin: 0;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: clamp(2rem, 3.5vw, 3.2rem);
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+  color: #fff8ed;
+}
+
+/* Mode toggle pill container */
+.cmd__mode-toggle {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.35rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  align-self: end;
+}
+
+.cmd__mode-btn {
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+  white-space: nowrap;
+}
+
+.cmd__mode-btn--active {
+  background: rgba(230, 162, 58, 0.18);
+  color: #ffe6aa;
+}
+
+.cmd__mode-btn:hover:not(.cmd__mode-btn--active) {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+/* Stat strip: 3 pills */
+.cmd__stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.cmd__stat-pill {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 0.65rem 0.9rem;
+  background: rgba(18, 22, 31, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.cmd__stat-pill__label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgba(243, 197, 106, 0.82);
+}
+
+.cmd__stat-pill__value {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.3rem;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.cmd__stat-pill__sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* Main: map (flex 1) + rail (400px) */
+/* 3-column body: controls | map | info */
+.cmd__body {
+  display: grid;
+  grid-template-columns: 215px minmax(0, 1fr) 292px;
+  grid-template-areas: "controls map info";
+  gap: 1rem;
+  height: clamp(600px, calc(100vh - 200px), 820px);
+}
+
+/* Left controls column */
+.cmd__controls-col {
+  grid-area: controls;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1rem;
+  background: rgba(18, 22, 31, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  overflow-y: auto;
+}
+
+.cmd__controls-col::-webkit-scrollbar {
+  width: 5px;
+}
+
+.cmd__controls-col::-webkit-scrollbar-thumb {
+  background: rgba(230, 162, 58, 0.35);
+  border-radius: 999px;
+}
+
+.cmd__controls-col__label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(243, 197, 106, 0.82);
+  margin-bottom: 0.1rem;
+}
+
+/* Map area: stretch to fill grid cell */
+.cmd__map-area {
+  grid-area: map;
+  min-width: 0;
+  height: 100%;
+}
+
+.cmd__map-area .map-card {
+  height: 100% !important;
+  min-height: 0;
+}
+
+.cmd__map-area .map-stage {
+  height: 100% !important;
+  min-height: 0;
+}
+
+/* Right info column: scrollable panel cards */
+.cmd__info-col {
+  grid-area: info;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+
+.cmd__info-col::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cmd__info-col::-webkit-scrollbar-thumb {
+  background: rgba(230, 162, 58, 0.4);
+  border-radius: 999px;
+}
+
+/* Compact borough ranking inside rail */
+.cmd__ranking {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cmd__ranking__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cmd__ranking__item:last-child {
+  border-bottom: none;
+}
+
+.cmd__ranking__rank {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent);
+  min-width: 1.2rem;
+  text-align: center;
+}
+
+.cmd__ranking__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cmd__ranking__body strong {
+  font-size: 0.88rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cmd__ranking__body small {
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cmd__ranking__value {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* Crime type breakdown bars */
+.cmd__type-bars {
+  list-style: none;
+  padding: 0;
+  margin: 0.65rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cmd__type-bar-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.84rem;
+}
+
+.cmd__type-bar-meta span {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmd__type-bar-meta strong {
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.cmd__type-bar-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-top: 0.2rem;
+}
+
+.cmd__type-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffd56f, #e85f3d);
+  transition: width 280ms ease;
+}
+
+.cmd__drill-hint {
+  font-size: 0.86rem;
+  color: var(--muted);
+  margin: 0.75rem 0 0;
+  line-height: 1.55;
+}
+
+/* Responsive: ≤1280px — collapse controls into top row */
+@media (max-width: 1280px) {
+  .cmd__body {
+    grid-template-columns: 200px minmax(0, 1fr) 270px;
+  }
+}
+
+@media (max-width: 1120px) {
+  .cmd__header {
+    grid-template-columns: 1fr;
+  }
+
+  .cmd__mode-toggle {
+    align-self: start;
+  }
+
+  /* Controls move above the map, info moves below */
+  .cmd__body {
+    grid-template-columns: 1fr 280px;
+    grid-template-areas:
+      "controls controls"
+      "map      info";
+    height: auto;
+  }
+
+  .cmd__controls-col {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    overflow-y: visible;
+  }
+
+  .cmd__controls-col .wheel-selector {
+    flex: 1 1 180px;
+    min-width: 160px;
+  }
+
+  .cmd__map-area .map-card,
+  .cmd__map-area .map-stage {
+    height: 560px !important;
+  }
+
+  .cmd__info-col {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 820px) {
+  .cmd__body {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "controls"
+      "map"
+      "info";
+  }
+
+  .cmd__stat-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cmd__map-area .map-card,
+  .cmd__map-area .map-stage {
+    height: 480px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .cmd__stat-strip {
+    grid-template-columns: 1fr;
+  }
+}
+

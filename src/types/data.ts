@@ -131,6 +131,34 @@ export interface SummaryData {
   hotspots: HotspotSummary;
 }
 
+export interface ChartPoint {
+  key: string;
+  label: string;
+  value: number;
+}
+
+export interface BoroughChangePoint {
+  name: string;
+  value: number;
+  total2024: number;
+  total2025: number;
+}
+
+export interface PoliceStrengthPoint {
+  key: string;
+  label: string;
+  policeOfficerStrength: number;
+  policeStaffStrength: number;
+  pcsoStrength: number;
+}
+
+export interface BackgroundChartsData {
+  recordedCrime: ChartPoint[];
+  boroughChange: BoroughChangePoint[];
+  policeConfidence: ChartPoint[];
+  policeForceStrength: PoliceStrengthPoint[];
+}
+
 export type CompactIncidentRecord = [number, number, number, number, number];
 
 export interface IncidentPayload {
@@ -167,4 +195,5 @@ export interface HotspotCell {
   dominantType: string;
   dominantBorough: string;
   sampleIndexes: number[];
+  typeCounts: Record<string, number>;
 }

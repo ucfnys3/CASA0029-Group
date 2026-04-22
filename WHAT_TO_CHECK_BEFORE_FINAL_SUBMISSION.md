@@ -34,8 +34,10 @@
 
 ## Data Checks
 
+- Raw source data is expected inside the project at `data/`.
 - Spot-check a few borough monthly values against `Final_Borough_Map.geojson`.
 - Spot-check a few LSOA indicator values against the raw Census CSVs.
+- Spot-check `Police_Force_Strength.csv` and `public-perception-data.csv` against the Introduction page charts.
 - Confirm that selected hotspot samples match the current month and crime-type filters.
 - Confirm that the index ranking still looks sensible after any future variable changes.
 
@@ -50,6 +52,6 @@
 
 - Main working copy:
   `F:\UCL\0029group_test\final_prototype_website`
-- Secondary testing/share copy:
+- Optional secondary testing/share copy:
   `F:\UCL\0029group_website_test`
-- Keep both locations synchronized if the team uses both.
+- If the team deletes the optional testing copy, use the main working copy for development and preview.

@@ -1,131 +1,164 @@
+import {
+  BoroughChangeChart,
+  GovLineChartCard,
+  PoliceStrengthChart,
+} from '../../components/GovStyleCharts';
 import StoryCard from '../../components/StoryCard';
 import Takeaway from '../../components/Takeaway';
 import { useJsonData } from '../../hooks/useJsonData';
-import { formatCompact, formatInteger, formatPercent, formatRate } from '../../lib/format';
-import type { SummaryData } from '../../types/data';
+import type { BackgroundChartsData } from '../../types/data';
 
-const evidenceCards = [
+const responseSources = [
   {
-    title: 'Crime is a city problem, not only a police problem',
-    text:
-      'London policy documents increasingly frame safety through partnership work, prevention, public health, and the complex causes of crime. That framing fits this atlas: the maps ask where risk accumulates, not just where offences are recorded.',
-    source: 'London Police and Crime Plan 2025-2029',
+    label: 'Mayor of London: Police and Crime Plan 2025-2029',
     href:
       'https://www.london.gov.uk/programmes-strategies/mayors-office-policing-and-crime-mopac/mayors-police-and-crime-plan-2025-2029',
   },
   {
-    title: 'Trust and confidence are part of the background',
-    text:
-      'The London Assembly noted that recorded crime volumes had risen year-on-year since 2021-22 and that confidence in the Met and victim satisfaction had fallen. Public safety is therefore also a question of legitimacy and lived confidence.',
-    source: 'London Assembly Police and Crime Committee, 2025',
+    label: 'London Assembly: response to the draft Police and Crime Plan',
     href:
       'https://www.london.gov.uk/who-we-are/what-london-assembly-does/london-assembly-work/london-assembly-publications/response-mayors-draft-police-and-crime-plan-2025-29',
   },
   {
-    title: 'The wider national picture is mixed',
-    text:
-      'ONS estimates for England and Wales show a recent rise in headline CSEW crime, driven strongly by fraud, while some high-harm recorded offences moved differently. This is why the atlas separates crime type, time frame, and geography.',
-    source: 'ONS Crime in England and Wales, YE March 2025',
+    label: 'ONS: Crime in England and Wales, year ending March 2025',
     href:
       'https://www.ons.gov.uk/peoplepopulationandcommunity/crimeandjustice/bulletins/crimeinenglandandwales/yearendingmarch2025',
   },
+];
+
+const theorySources = [
   {
-    title: 'Social disorganisation theory gives a useful lens',
+    title: 'Social disorganisation theory',
     text:
-      'Classic neighbourhood theory links crime variation to area-level conditions such as low economic status, residential mobility, weak local networks, and limited informal social control. We use this carefully as context, not as proof of causation.',
-    source: 'Sampson and Groves, 1989; building on Shaw and McKay',
+      'Neighbourhood crime is shaped by local capacity for informal social control. Concentrated disadvantage, residential instability, and weak community networks can make it harder for places to collectively manage risk.',
+    source: 'Sampson and Groves, 1989; Shaw and McKay tradition',
     href:
       'https://nij.ojp.gov/library/publications/community-structure-and-crime-testing-social-disorganization-theory',
+  },
+  {
+    title: 'Routine activity theory',
+    text:
+      'Crime opportunities rise where motivated offenders, suitable targets, and limited guardianship converge. This helps explain why central activity zones and transport corridors can show intense recorded crime even when resident deprivation is not the only driver.',
+    source: 'Cohen and Felson, 1979',
+    href: 'https://ojp.gov/ncjrs/virtual-library/abstracts/social-change-and-crime-rate-trends-routine-activity-approach',
+  },
+  {
+    title: 'Structural vulnerability',
+    text:
+      'The project treats unemployment, deprivation, housing pressure, overcrowding, health, and population density as contextual conditions. They do not prove individual causation, but they help explain why risk is spatially uneven.',
+    source: 'Project structural indicators, 2021 LSOA analysis',
+    href: '#/mapping-vulnerability',
   },
 ];
 
 const IntroductionPage = () => {
-  const { data: summary, loading, error } = useJsonData<SummaryData>('/data/summary.json');
+  const { data: charts, loading, error } =
+    useJsonData<BackgroundChartsData>('/data/backgroundCharts.json');
 
   if (loading) {
     return <div className="shell-width page-shell">Loading introduction...</div>;
   }
 
-  if (!summary || error) {
-    return <div className="shell-width page-shell">Could not load the introduction. {error}</div>;
+  if (!charts || error) {
+    return (
+      <div className="shell-width page-shell">
+        Could not load the introduction charts. {error}
+      </div>
+    );
   }
-
-  const q4TopBorough = summary.overview.topBoroughsByQ4Rate[0] ?? null;
-  const topCategory = summary.overview.topCategoriesQ4[0] ?? null;
 
   return (
     <div className="shell-width page-shell introduction-page">
-      <section className="chapter-hero">
-        <div className="chapter-hero__brief">
-          <p className="chapter-hero__label">Page 2 / Introduction and background</p>
-          <h1>Before the maps: why crime concentration matters</h1>
+      <section className="intro-page-heading">
+        <p className="intro-page-heading__label">Page 2 / Introduction and background</p>
+        <h1>Why London’s crime problem persists</h1>
+        <p>
+          This page sets up the atlas question. London is not short of policy attention,
+          policing reform, or public concern. Yet recorded crime, uneven borough-level change,
+          and falling confidence point to a deeper spatial problem: safety is produced through
+          neighbourhood conditions as well as enforcement.
+        </p>
+      </section>
+
+      <section className="intro-narrative-row intro-narrative-row--problem">
+        <div className="intro-narrative-copy">
+          <span>01 / The pressure</span>
+          <h2>Recorded crime remains a visible city-wide concern.</h2>
           <p>
-            London is often discussed through headlines: dangerous streets, falling confidence,
-            visible theft, knife crime, or policing reform. This project slows that story down and
-            asks a spatial question: where do crime and structural vulnerability overlap?
+            The project data show recent recorded crime moving unevenly across time and boroughs.
+            This does not mean every Londoner experiences risk in the same way. It means that
+            city-level headlines need to be broken down geographically before they can explain
+            where public safety pressure is accumulating.
           </p>
           <p>
-            We do not treat league-table claims such as "most dangerous city" rankings as evidence
-            unless the source and method are robust. Instead, the atlas uses official and project
-            datasets to show unevenness inside London.
+            The first two charts use the project’s borough-series data. They frame the problem
+            before the site moves into interactive maps.
           </p>
         </div>
-
-        <div className="chapter-hero__stats intro-stat-strip">
-          <article className="intro-stat">
-            <span>Q4 2025 geocoded incidents</span>
-            <strong>{formatCompact(summary.home.q4IncidentCount)}</strong>
-            <p>Street-level records for September to December 2025.</p>
-          </article>
-          <article className="intro-stat">
-            <span>Q4 borough-series offences</span>
-            <strong>{formatCompact(summary.overview.overviewCards.q4Offences)}</strong>
-            <p>Aggregated borough-level offences in the 2025 series.</p>
-          </article>
-          <article className="intro-stat">
-            <span>Top LSOA decile share</span>
-            <strong>{formatPercent(summary.home.topDecileCrimeShare)}</strong>
-            <p>Share of 2021 crimes in the highest-rate LSOA decile.</p>
-          </article>
-          <article className="intro-stat">
-            <span>Neighbourhoods mapped</span>
-            <strong>{formatInteger(summary.home.lsoaCount)}</strong>
-            <p>{summary.home.completeStructuralCount.toLocaleString()} LSOAs have complete indicators.</p>
-          </article>
+        <div className="intro-chart-pair">
+          <GovLineChartCard
+            title="Recorded crime trend"
+            legend="Total offences"
+            data={charts.recordedCrime}
+            yLabel="Number"
+          />
+          <BoroughChangeChart data={charts.boroughChange} />
         </div>
       </section>
 
-      <section className="background-layout">
-        <aside className="background-portrait panel-card">
-          <span className="background-portrait__tag">Brief</span>
-          <h2>Crime concentration is not random noise.</h2>
+      <section className="intro-narrative-row intro-narrative-row--response">
+        <div className="intro-chart-pair">
+          <GovLineChartCard
+            title="Confidence in the police"
+            legend="Public confidence"
+            data={charts.policeConfidence}
+            yLabel="Percent"
+            valueFormatter={(value) => `${Math.round(value)}%`}
+          />
+          <PoliceStrengthChart data={charts.policeForceStrength} />
+        </div>
+        <div className="intro-narrative-copy">
+          <span>02 / The response</span>
+          <h2>More policy effort does not automatically resolve the pattern.</h2>
           <p>
-            A small number of places carry a much larger share of recorded crime. Central activity
-            zones, transport corridors, nightlife economies, housing instability, deprivation, and
-            labour-market insecurity can all shape where risk becomes visible.
+            London’s current policing agenda emphasises prevention, partnership work, confidence,
+            neighbourhood policing, and harm reduction. Those are substantial interventions, but
+            the public-confidence data remind us that institutional response and public legitimacy
+            do not move in a simple straight line.
           </p>
-          <div className="background-portrait__divider" />
           <p>
-            {q4TopBorough && topCategory
-              ? `In the 2025 borough series, ${q4TopBorough.name} records the highest Q4 rate at ${formatRate(
-                  q4TopBorough.q4Rate,
-                )}. The largest Q4 category is ${topCategory.name.toLowerCase()}, with ${formatCompact(
-                  topCategory.count,
-                )} recorded offences.`
-              : 'The borough and category summaries load from the project data rather than a static report extract.'}
+            This is why the site avoids treating crime only as a policing output. The maps ask
+            what kinds of places repeatedly sit closer to recorded risk, and what structural
+            conditions those places share.
           </p>
-        </aside>
+          <div className="intro-source-list" aria-label="Background sources">
+            {responseSources.map((source) => (
+              <a href={source.href} target="_blank" rel="noreferrer" key={source.href}>
+                {source.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        <div className="evidence-stack">
-          <h2>How this project frames the problem</h2>
-          {evidenceCards.map((card) => (
-            <article className="evidence-card" key={card.title}>
-              <div>
-                <h3>{card.title}</h3>
-                <p>{card.text}</p>
-              </div>
-              <a href={card.href} target="_blank" rel="noreferrer">
-                {card.source}
+      <section className="intro-theory-section">
+        <div className="intro-theory-section__header">
+          <span>03 / From enforcement to explanation</span>
+          <h2>The atlas turns from incidents to neighbourhood vulnerability.</h2>
+          <p>
+            Criminological theory helps explain why the rest of the project maps deprivation,
+            housing pressure, health, youth concentration, overcrowding, and labour-market
+            insecurity alongside crime. These theories are lenses for interpretation, not claims
+            that poverty or identity mechanically causes crime.
+          </p>
+        </div>
+        <div className="intro-theory-grid">
+          {theorySources.map((item) => (
+            <article className="intro-theory-card" key={item.title}>
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+              <a href={item.href} target={item.href.startsWith('#') ? undefined : '_blank'} rel="noreferrer">
+                {item.source}
               </a>
             </article>
           ))}
@@ -136,23 +169,23 @@ const IntroductionPage = () => {
         <StoryCard
           href="/borough-crime-situation"
           title="Borough crime situation"
-          description="Move from background into the first analytical map: borough-level rates, totals, categories, and monthly shifts."
-        />
-        <StoryCard
-          href="/recent-incidents"
-          title="Recent incidents and hotspots"
-          description="Explore where Q4 2025 geocoded incident records cluster, with month and crime-type controls."
+          description="Move from the background problem into borough-level rates, totals, categories, and monthly shifts."
         />
         <StoryCard
           href="/mapping-vulnerability"
           title="Mapping vulnerability"
-          description="Switch to 2021 neighbourhood variables that describe structural pressure at LSOA scale."
+          description="Switch from policing headlines to neighbourhood conditions at LSOA scale."
+        />
+        <StoryCard
+          href="/crime-and-inequality"
+          title="Crime and inequality together"
+          description="Compare where recorded crime and structural vulnerability overlap most clearly."
         />
       </section>
 
       <Takeaway
-        title="What to keep in mind"
-        text="The website separates the structural 2021 neighbourhood analysis from the Q4 2025 incident layer. They support one narrative about spatial inequality, but they should not be interpreted as the same evidence type."
+        title="The bridge into the maps"
+        text="The following pages do not ask whether policing matters; they ask why crime is spatially concentrated and why some neighbourhoods carry overlapping social and economic vulnerability. That distinction keeps the analysis structural rather than stigmatising."
       />
     </div>
   );

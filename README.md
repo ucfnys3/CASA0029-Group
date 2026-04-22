@@ -60,14 +60,18 @@ This site is a fresh build. It does not directly merge or copy the older sites.
 The preprocessing script uses real files from:
 
 ```text
-F:\UCL\0029group_test\data
+data/
 ```
+
+The project is now self-contained: the raw source files live inside this project folder at `data/`, while the website reads processed runtime files from `public/data/`.
 
 Core inputs include:
 
 - `LSOA_Merged_map_with_data.geojson`
 - `Final_Borough_Map.geojson`
 - `london_crimes_2025_flexible.json`
+- `Police_Force_Strength.csv`
+- `public-perception-data.csv`
 - Q4 2025 monthly crime point GeoJSON files
 - Census-derived LSOA CSV files for unemployment, tenure, deprivation, health, overcrowding, age, population density, and total residents
 
@@ -81,6 +85,7 @@ Key runtime outputs:
 - `public/data/lsoa.geojson`
 - `public/data/lsoaLookup.json`
 - `public/data/summary.json`
+- `public/data/backgroundCharts.json`
 - `public/data/incidents/2025-Q4.json`
 - `public/data/incidents/2025-09.json`
 - `public/data/incidents/2025-10.json`
@@ -105,10 +110,16 @@ npm run prepare-data
 npm run dev
 ```
 
-If the source data is not in `F:\UCL\0029group_test\data`, set the path first:
+By default, `npm run prepare-data` reads raw inputs from this folder:
+
+```text
+F:\UCL\0029group_test\final_prototype_website\data
+```
+
+If you need to temporarily read source data from another folder, set the path first:
 
 ```bash
-set CASA0029_SOURCE_DIR=F:\UCL\0029group_test\data
+set CASA0029_SOURCE_DIR=F:\some\other\data-folder
 npm run prepare-data
 ```
 

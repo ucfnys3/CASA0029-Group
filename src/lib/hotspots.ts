@@ -153,6 +153,7 @@ export const buildHotspotCells = (
         dominantType,
         dominantBorough,
         sampleIndexes: bucket.sampleIndexes,
+        typeCounts: Object.fromEntries(bucket.typeCounts),
       };
     })
     .sort((a, b) => b.count - a.count);
