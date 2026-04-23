@@ -1,21 +1,20 @@
 import { useMemo, useState } from 'react';
 import ChoroplethMap from '../../components/ChoroplethMap';
-import HotspotMap from '../../components/HotspotMap';
+import CrimeDeckMap from '../../components/CrimeDeckMap';
+import type { CrimeDeckIncident } from '../../components/CrimeDeckMap';
 import LineChart from '../../components/LineChart';
 import WheelSelector from '../../components/WheelSelector';
 import { useJsonData } from '../../hooks/useJsonData';
 import { formatCompact, formatInteger, formatPercent, formatRate } from '../../lib/format';
-import { decodeCellSamples, filteredIncidentCount } from '../../lib/hotspots';
 import type {
   BoroughGeoJson,
   BoroughProperties,
-  HotspotCell,
   IncidentPayload,
   LsoaLookup,
   SummaryData,
 } from '../../types/data';
 
-type DashboardMode = 'borough' | 'hotspot';
+type DashboardMode = 'borough' | 'hotspot3d';
 
 const q4Months = ['202509', '202510', '202511', '202512'];
 
@@ -44,56 +43,6 @@ const periodOutcomes = (borough: BoroughProperties | null, period: string) => {
   );
 };
 
-type CellDetailPanelProps = {
-  cell: HotspotCell;
-  isDrillDown: boolean;
-};
-
-const CellDetailPanel = ({ cell, isDrillDown }: CellDetailPanelProps) => {
-  const sortedTypes = Object.entries(cell.typeCounts).sort((a, b) => b[1] - a[1]);
-  const maxCount = sortedTypes[0]?.[1] ?? 1;
-  return (
-    <>
-      <div className="metric-list">
-        <div>
-          <span>Total incidents</span>
-          <strong>{cell.count}</strong>
-        </div>
-        <div>
-          <span>Dominant type</span>
-          <strong>{cell.dominantType}</strong>
-        </div>
-        <div>
-          <span>Dominant borough</span>
-          <strong>{cell.dominantBorough}</strong>
-        </div>
-      </div>
-      {isDrillDown ? (
-        <ul className="cmd__type-bars">
-          {sortedTypes.map(([type, count]) => (
-            <li key={type}>
-              <div className="cmd__type-bar-meta">
-                <span>{type}</span>
-                <strong>{count}</strong>
-              </div>
-              <div className="cmd__type-bar-track">
-                <div
-                  className="cmd__type-bar-fill"
-                  style={{ width: `${(count / maxCount) * 100}%` }}
-                />
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="cmd__drill-hint">
-          Zoom further in and click a cell to see the crime type breakdown.
-        </p>
-      )}
-    </>
-  );
-};
-
 const CrimeMapDashboard = () => {
   const [mode, setMode] = useState<DashboardMode>('borough');
 
@@ -103,8 +52,6 @@ const CrimeMapDashboard = () => {
 
   const [hotspotMonth, setHotspotMonth] = useState('2025-Q4');
   const [selectedType, setSelectedType] = useState('All crime types');
-  const [selectedCell, setSelectedCell] = useState<HotspotCell | null>(null);
-  const [isDrillDown, setIsDrillDown] = useState(false);
 
   const { data: summary } = useJsonData<SummaryData>('/data/summary.json');
   const { data: boroughs } = useJsonData<BoroughGeoJson>('/data/boroughs.geojson');
@@ -170,25 +117,21 @@ const CrimeMapDashboard = () => {
   const hotspotMonthLabel =
     summary?.hotspots.availableMonths.find((m) => m.key === hotspotMonth)?.label ?? hotspotMonth;
 
-  const filteredCount = payload && lookup ? filteredIncidentCount(payload, selectedType) : 0;
-  const sampledIncidents =
-    payload && lookup ? decodeCellSamples(payload, lookup, selectedCell) : [];
-  const monthSummary =
-    summary?.hotspots.monthSummaries.find((e) => e.month === hotspotMonth) ?? null;
-
-  const handleSelectCell = (cell: HotspotCell) => {
-    setSelectedCell(cell);
-    setIsDrillDown(false);
-  };
-
-  const handleDrillDown = (_cell: HotspotCell) => {
-    setIsDrillDown(true);
-  };
+  const deckIncidents = useMemo<CrimeDeckIncident[]>(() => {
+    if (!payload || !lookup) return [];
+    return payload.records.map((record) => {
+      const lsoaCode = payload.lsoas[record[4]];
+      return {
+        lng: record[0],
+        lat: record[1],
+        category: payload.types[record[2]],
+        borough: lookup[lsoaCode]?.borough,
+      };
+    });
+  }, [payload, lookup]);
 
   const handleModeChange = (next: DashboardMode) => {
     setMode(next);
-    setSelectedCell(null);
-    setIsDrillDown(false);
   };
 
   const statPills =
@@ -199,7 +142,7 @@ const CrimeMapDashboard = () => {
           { label: 'Selected borough', value: activeBorough?.name ?? '—', sub: formatRate(activeRate) },
         ]
       : [
-          { label: 'Visible incidents', value: formatCompact(filteredCount), sub: hotspotMonthLabel },
+          { label: 'Total incidents', value: formatCompact(deckIncidents.length), sub: hotspotMonthLabel },
           { label: 'Period', value: hotspotMonthLabel, sub: 'Current selection' },
           {
             label: 'Crime type',
@@ -224,10 +167,10 @@ const CrimeMapDashboard = () => {
             Borough Overview
           </button>
           <button
-            className={mode === 'hotspot' ? 'cmd__mode-btn cmd__mode-btn--active' : 'cmd__mode-btn'}
-            onClick={() => handleModeChange('hotspot')}
+            className={mode === 'hotspot3d' ? 'cmd__mode-btn cmd__mode-btn--active' : 'cmd__mode-btn'}
+            onClick={() => handleModeChange('hotspot3d')}
           >
-            Incident Hotspots
+            3D Hotspots
           </button>
         </div>
 
@@ -263,28 +206,35 @@ const CrimeMapDashboard = () => {
               caption="Click a borough to update the profile panel."
             />
           ) : payload && lookup ? (
-            <HotspotMap
-              payload={payload}
-              selectedType={selectedType}
-              lookup={lookup}
-              boroughs={boroughs}
-              selectedCell={selectedCell}
-              onSelectCell={handleSelectCell}
-              onDrillDown={handleDrillDown}
-              fillContainer
+            <CrimeDeckMap
+              incidents={deckIncidents}
+              selectedCrimeType={selectedType === 'All crime types' ? 'All' : selectedType}
+              height="100%"
+              crimeTypeOptions={summary?.hotspots.crimeTypes ?? []}
+              onCrimeTypeChange={(val) =>
+                setSelectedType(val === 'All' ? 'All crime types' : val)
+              }
+              monthOptions={
+                summary?.hotspots.availableMonths.map((m) => ({
+                  value: m.key,
+                  label: m.label,
+                })) ?? []
+              }
+              selectedMonth={hotspotMonth}
+              selectedMonthLabel={hotspotMonthLabel}
+              onMonthChange={setHotspotMonth}
             />
           ) : (
             <div className="cmd__map-loading">Loading incident data…</div>
           )}
         </div>
 
-        {/* Left floating panel: controls */}
-        <aside className="cmd__float-panel cmd__float-panel--left">
-          <p className="cmd__float-panel__label">Controls</p>
+        {/* Borough mode: left and right floating panels */}
+        {mode === 'borough' && (
+          <>
+            <aside className="cmd__float-panel cmd__float-panel--left">
+              <p className="cmd__float-panel__label">Controls</p>
 
-          {mode === 'borough' ? (
-            <>
-              {/* Rate / Count toggle — replaces WheelSelector */}
               <div className="cmd__metric-toggle">
                 <span className="cmd__metric-toggle__label">Metric</span>
                 <div className="cmd__metric-toggle__btns">
@@ -321,48 +271,9 @@ const CrimeMapDashboard = () => {
                 Crime is concentrated, not evenly spread. Westminster's extreme rate reflects
                 tourist footfall — east London hotspots tie more closely to residential deprivation.
               </div>
-            </>
-          ) : (
-            <>
-              <WheelSelector
-                label="Month"
-                value={hotspotMonth}
-                maxHeight={200}
-                options={
-                  summary?.hotspots.availableMonths.map((m) => ({
-                    value: m.key,
-                    label: m.label,
-                    description: m.key === '2025-Q4' ? 'Combined view' : 'Single month',
-                  })) ?? []
-                }
-                onChange={(value) => {
-                  setHotspotMonth(value);
-                  setSelectedCell(null);
-                  setIsDrillDown(false);
-                }}
-              />
-              <WheelSelector
-                label="Crime type"
-                value={selectedType}
-                maxHeight={260}
-                options={[
-                  { value: 'All crime types', label: 'All crime types', description: 'Full selected period' },
-                  ...(summary?.hotspots.crimeTypes.map((type) => ({ value: type, label: type })) ?? []),
-                ]}
-                onChange={(value) => {
-                  setSelectedType(value);
-                  setSelectedCell(null);
-                  setIsDrillDown(false);
-                }}
-              />
-            </>
-          )}
-        </aside>
+            </aside>
 
-        {/* Right floating panel: data */}
-        <aside className="cmd__float-panel cmd__float-panel--right">
-          {mode === 'borough' ? (
-            <>
+            <aside className="cmd__float-panel cmd__float-panel--right">
               <div className="cmd__float-section">
                 <p className="cmd__float-panel__label">Selected borough</p>
                 <h3 className="cmd__float-title">{activeBorough?.name ?? '—'}</h3>
@@ -426,52 +337,9 @@ const CrimeMapDashboard = () => {
                   />
                 </div>
               )}
-            </>
-          ) : (
-            <>
-              <div className="cmd__float-section">
-                <p className="cmd__float-panel__label">Selected hotspot</p>
-                {selectedCell ? (
-                  <CellDetailPanel cell={selectedCell} isDrillDown={isDrillDown} />
-                ) : (
-                  <p className="cmd__drill-hint">
-                    Click any cell. At low zoom the map zooms in automatically; at high zoom a
-                    crime type breakdown appears here.
-                  </p>
-                )}
-              </div>
-
-              {selectedCell && sampledIncidents.length > 0 && (
-                <div className="cmd__float-section">
-                  <p className="cmd__float-panel__label">Sample incidents</p>
-                  <ul className="incident-list">
-                    {sampledIncidents.slice(0, 6).map((incident, index) => (
-                      <li key={`${incident.location}-${index}`}>
-                        <strong>{incident.type}</strong>
-                        <span>{incident.location}</span>
-                        <small>{incident.lsoaName} / {incident.borough}</small>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {monthSummary && (
-                <div className="cmd__float-section">
-                  <p className="cmd__float-panel__label">Top crime types · {hotspotMonthLabel}</p>
-                  <ul className="mini-list">
-                    {monthSummary.topCrimeTypes.map((item) => (
-                      <li key={item.name}>
-                        <span>{item.name}</span>
-                        <strong>{formatCompact(item.count)}</strong>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </>
-          )}
-        </aside>
+            </aside>
+          </>
+        )}
       </div>
     </div>
   );

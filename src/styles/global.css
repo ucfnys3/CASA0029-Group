@@ -3502,7 +3502,8 @@ select {
   z-index: 0;
 }
 
-.cmd__map-canvas .map-card {
+.cmd__map-canvas .map-card,
+.cmd__map-canvas .crime-deck-map {
   height: 100% !important;
   border-radius: 0;
   box-shadow: none;
