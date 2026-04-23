@@ -242,41 +242,92 @@ const CrimeMapDashboard = () => {
         </div>
       </header>
 
-      <div className="cmd__body">
-        {/* Left: controls column */}
-        <aside className="cmd__controls-col">
-          <p className="cmd__controls-col__label">Controls</p>
+      {/* ── Floating map stage ── */}
+      <div className="cmd__stage">
+        {/* Map canvas fills the stage */}
+        <div className="cmd__map-canvas">
+          {mode === 'borough' ? (
+            <ChoroplethMap
+              data={boroughs}
+              valueKey={valueKey}
+              paletteName="crime"
+              legendTitle={
+                metricMode === 'rate'
+                  ? `${boroughMonthLabel} offences per 1,000 residents`
+                  : `${boroughMonthLabel} offences`
+              }
+              selectedCode={activeBorough?.code}
+              onSelect={setSelectedBorough}
+              valueFormatter={metricMode === 'rate' ? formatRate : formatInteger}
+              fillContainer
+              caption="Click a borough to update the profile panel."
+            />
+          ) : payload && lookup ? (
+            <HotspotMap
+              payload={payload}
+              selectedType={selectedType}
+              lookup={lookup}
+              boroughs={boroughs}
+              selectedCell={selectedCell}
+              onSelectCell={handleSelectCell}
+              onDrillDown={handleDrillDown}
+              fillContainer
+            />
+          ) : (
+            <div className="cmd__map-loading">Loading incident data…</div>
+          )}
+        </div>
+
+        {/* Left floating panel: controls */}
+        <aside className="cmd__float-panel cmd__float-panel--left">
+          <p className="cmd__float-panel__label">Controls</p>
 
           {mode === 'borough' ? (
             <>
-              <WheelSelector
-                label="Metric"
-                value={metricMode}
-                helper="2 modes"
-                maxHeight={110}
-                options={[
-                  { value: 'rate', label: 'Rate', description: 'Offences per 1,000 residents' },
-                  { value: 'count', label: 'Count', description: 'Recorded offence volume' },
-                ]}
-                onChange={(value) => setMetricMode(value as 'rate' | 'count')}
-              />
+              {/* Rate / Count toggle — replaces WheelSelector */}
+              <div className="cmd__metric-toggle">
+                <span className="cmd__metric-toggle__label">Metric</span>
+                <div className="cmd__metric-toggle__btns">
+                  <button
+                    className={metricMode === 'rate' ? 'active' : ''}
+                    onClick={() => setMetricMode('rate')}
+                  >
+                    Rate
+                  </button>
+                  <button
+                    className={metricMode === 'count' ? 'active' : ''}
+                    onClick={() => setMetricMode('count')}
+                  >
+                    Count
+                  </button>
+                </div>
+                <p className="cmd__metric-toggle__hint">
+                  {metricMode === 'rate' ? 'Offences per 1,000 residents' : 'Recorded offence volume'}
+                </p>
+              </div>
+
               <WheelSelector
                 label="Time"
                 value={boroughMonth}
-                maxHeight={300}
+                maxHeight={220}
                 options={boroughTimeOptions}
                 onChange={(value) => {
                   setBoroughMonth(value);
                   setSelectedBorough(null);
                 }}
               />
+
+              <div className="cmd__insight-box">
+                Crime is concentrated, not evenly spread. Westminster's extreme rate reflects
+                tourist footfall — east London hotspots tie more closely to residential deprivation.
+              </div>
             </>
           ) : (
             <>
               <WheelSelector
                 label="Month"
                 value={hotspotMonth}
-                maxHeight={240}
+                maxHeight={200}
                 options={
                   summary?.hotspots.availableMonths.map((m) => ({
                     value: m.key,
@@ -293,17 +344,10 @@ const CrimeMapDashboard = () => {
               <WheelSelector
                 label="Crime type"
                 value={selectedType}
-                maxHeight={360}
+                maxHeight={260}
                 options={[
-                  {
-                    value: 'All crime types',
-                    label: 'All crime types',
-                    description: 'Full selected month or quarter',
-                  },
-                  ...(summary?.hotspots.crimeTypes.map((type) => ({
-                    value: type,
-                    label: type,
-                  })) ?? []),
+                  { value: 'All crime types', label: 'All crime types', description: 'Full selected period' },
+                  ...(summary?.hotspots.crimeTypes.map((type) => ({ value: type, label: type })) ?? []),
                 ]}
                 onChange={(value) => {
                   setSelectedType(value);
@@ -315,53 +359,13 @@ const CrimeMapDashboard = () => {
           )}
         </aside>
 
-        {/* Centre: map */}
-        <section className="cmd__map-area">
+        {/* Right floating panel: data */}
+        <aside className="cmd__float-panel cmd__float-panel--right">
           {mode === 'borough' ? (
-            <ChoroplethMap
-              data={boroughs}
-              valueKey={valueKey}
-              paletteName="crime"
-              legendTitle={
-                metricMode === 'rate'
-                  ? `${boroughMonthLabel} offences per 1,000 residents`
-                  : `${boroughMonthLabel} offences`
-              }
-              selectedCode={activeBorough?.code}
-              onSelect={setSelectedBorough}
-              valueFormatter={metricMode === 'rate' ? formatRate : formatInteger}
-              height={720}
-              caption="Click a borough to update the profile panel."
-            />
-          ) : payload && lookup ? (
-            <HotspotMap
-              payload={payload}
-              selectedType={selectedType}
-              lookup={lookup}
-              boroughs={boroughs}
-              selectedCell={selectedCell}
-              onSelectCell={handleSelectCell}
-              onDrillDown={handleDrillDown}
-            />
-          ) : (
-            <div className="map-card">
-              <div
-                className="map-stage"
-                style={{ height: 720, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <p style={{ color: 'var(--muted)' }}>Loading incident data…</p>
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* Right: info column */}
-        <aside className="cmd__info-col">
-          {mode === 'borough' && (
             <>
-              <article className="panel-card">
-                <p className="panel-card__eyebrow">Selected borough</p>
-                <h3>{activeBorough?.name ?? 'No borough selected'}</h3>
+              <div className="cmd__float-section">
+                <p className="cmd__float-panel__label">Selected borough</p>
+                <h3 className="cmd__float-title">{activeBorough?.name ?? '—'}</h3>
                 <div className="metric-list">
                   <div>
                     <span>{boroughMonthLabel} offences</span>
@@ -372,23 +376,23 @@ const CrimeMapDashboard = () => {
                     <strong>{formatRate(activeRate)}</strong>
                   </div>
                   <div>
-                    <span>{boroughMonthLabel} outcomes</span>
+                    <span>Outcomes</span>
                     <strong>{formatInteger(activeOutcomes)}</strong>
                   </div>
                   <div>
-                    <span>Share of London total</span>
+                    <span>Share of London</span>
                     <strong>{formatPercent(activeShare)}</strong>
                   </div>
                   <div>
-                    <span>Dominant Q4 category</span>
+                    <span>Top crime type</span>
                     <strong>{activeBorough?.dominantTypeQ4 ?? '—'}</strong>
                   </div>
                 </div>
-              </article>
+              </div>
 
-              <article className="panel-card">
-                <p className="panel-card__eyebrow">
-                  Top boroughs by {metricMode === 'rate' ? 'rate' : 'count'}
+              <div className="cmd__float-section">
+                <p className="cmd__float-panel__label">
+                  Top boroughs · {metricMode === 'rate' ? 'rate' : 'count'}
                 </p>
                 <ol className="cmd__ranking">
                   {sortedBoroughs.slice(0, 8).map((borough, i) => (
@@ -406,57 +410,55 @@ const CrimeMapDashboard = () => {
                     </li>
                   ))}
                 </ol>
-              </article>
+              </div>
 
               {summary && (
-                <LineChart
-                  title="Monthly pattern through 2025"
-                  points={summary.overview.monthlyTotals.map((m) => ({
-                    key: m.month,
-                    label: m.label,
-                    value: m.offences,
-                  }))}
-                  activeKey={boroughMonth === 'q4' ? undefined : boroughMonth}
-                  valueFormatter={formatInteger}
-                />
+                <div className="cmd__float-section">
+                  <LineChart
+                    title="Monthly pattern 2025"
+                    points={summary.overview.monthlyTotals.map((m) => ({
+                      key: m.month,
+                      label: m.label,
+                      value: m.offences,
+                    }))}
+                    activeKey={boroughMonth === 'q4' ? undefined : boroughMonth}
+                    valueFormatter={formatInteger}
+                  />
+                </div>
               )}
             </>
-          )}
-
-          {mode === 'hotspot' && (
+          ) : (
             <>
-              <article className="panel-card">
-                <p className="panel-card__eyebrow">Selected hotspot</p>
+              <div className="cmd__float-section">
+                <p className="cmd__float-panel__label">Selected hotspot</p>
                 {selectedCell ? (
                   <CellDetailPanel cell={selectedCell} isDrillDown={isDrillDown} />
                 ) : (
-                  <p>
+                  <p className="cmd__drill-hint">
                     Click any cell. At low zoom the map zooms in automatically; at high zoom a
                     crime type breakdown appears here.
                   </p>
                 )}
-              </article>
+              </div>
 
               {selectedCell && sampledIncidents.length > 0 && (
-                <article className="panel-card">
-                  <p className="panel-card__eyebrow">Sample incidents</p>
+                <div className="cmd__float-section">
+                  <p className="cmd__float-panel__label">Sample incidents</p>
                   <ul className="incident-list">
-                    {sampledIncidents.slice(0, 8).map((incident, index) => (
+                    {sampledIncidents.slice(0, 6).map((incident, index) => (
                       <li key={`${incident.location}-${index}`}>
                         <strong>{incident.type}</strong>
                         <span>{incident.location}</span>
-                        <small>
-                          {incident.lsoaName} / {incident.borough}
-                        </small>
+                        <small>{incident.lsoaName} / {incident.borough}</small>
                       </li>
                     ))}
                   </ul>
-                </article>
+                </div>
               )}
 
               {monthSummary && (
-                <article className="panel-card">
-                  <p className="panel-card__eyebrow">Month snapshot</p>
+                <div className="cmd__float-section">
+                  <p className="cmd__float-panel__label">Top crime types · {hotspotMonthLabel}</p>
                   <ul className="mini-list">
                     {monthSummary.topCrimeTypes.map((item) => (
                       <li key={item.name}>
@@ -465,7 +467,7 @@ const CrimeMapDashboard = () => {
                       </li>
                     ))}
                   </ul>
-                </article>
+                </div>
               )}
             </>
           )}

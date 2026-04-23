@@ -24,6 +24,7 @@ type ChoroplethMapProps<T extends BaseMapProperties> = {
   valueFormatter: (value: number | null) => string;
   caption?: string;
   height?: number;
+  fillContainer?: boolean;
   compact?: boolean;
   children?: ReactNode;
 };
@@ -40,6 +41,7 @@ const ChoroplethMap = <T extends BaseMapProperties>({
   valueFormatter,
   caption,
   height = 560,
+  fillContainer = false,
   compact = false,
   children,
 }: ChoroplethMapProps<T>) => {
@@ -84,7 +86,7 @@ const ChoroplethMap = <T extends BaseMapProperties>({
 
   return (
     <div className="map-card">
-      <div className="map-stage" style={{ height }}>
+      <div className={`map-stage${fillContainer ? ' map-stage--fill' : ''}`} style={fillContainer ? undefined : { height }}>
         <MapContainer
           center={londonCenter}
           zoom={compact ? 9.6 : 10}

@@ -1,8 +1,5 @@
 import { useMemo, useState } from 'react';
 import ChoroplethMap from '../components/ChoroplethMap';
-import PageHero from '../components/PageHero';
-import RankingList from '../components/RankingList';
-import Takeaway from '../components/Takeaway';
 import { useJsonData } from '../hooks/useJsonData';
 import { formatPercent, formatRate } from '../lib/format';
 import type { LsoaGeoJson, LsoaProperties, SummaryData } from '../types/data';
@@ -22,12 +19,12 @@ const PriorityPlacesPage = () => {
   }, [data]);
 
   if (loading || summaryLoading) {
-    return <div className="shell-width page-shell">Loading priority places...</div>;
+    return <div className="fmap-page fmap-page--loading">Loading priority places…</div>;
   }
 
   if (!data || !summary || error || summaryError) {
     return (
-      <div className="shell-width page-shell">
+      <div className="fmap-page fmap-page--loading">
         Could not load the priority index page. {error ?? summaryError}
       </div>
     );
@@ -36,15 +33,9 @@ const PriorityPlacesPage = () => {
   const activeLsoa = selectedLsoa ?? rankedIndex[0] ?? null;
 
   return (
-    <div className="shell-width page-shell">
-      <PageHero
-        eyebrow="Page 7"
-        title="Priority places"
-        description="This final synthesis page combines crime with the structural indicators into a comparative Crime Vulnerability Index. It is not a causal model; it is a way to summarise where multiple pressures stack up most clearly."
-        note="The index uses equal weights across crime rate, unemployment, private renting, deprivation, bad health, overcrowding, and youth share, with robust min-max scaling to reduce the pull of extreme outliers."
-      />
-
-      <section className="panel-split panel-split--map-heavy">
+    <div className="fmap-page">
+      {/* Map fills the stage */}
+      <div className="fmap-canvas">
         <ChoroplethMap
           data={data}
           valueKey="priorityIndex"
@@ -53,77 +44,102 @@ const PriorityPlacesPage = () => {
           selectedCode={activeLsoa?.code}
           onSelect={setSelectedLsoa}
           valueFormatter={formatPercent}
-          caption="Darker areas combine high crime rates with stronger structural vulnerability across the selected indicators."
+          fillContainer
+          caption="Darker areas combine high crime rates with stronger structural vulnerability."
         />
+      </div>
 
-        <div className="stack-column">
-          <article className="panel-card panel-card--sticky">
-            <p className="panel-card__eyebrow">How the index works</p>
-            <h3>Comparative, not causal</h3>
-            <p>
-              The index is designed to help compare places, not to claim that one variable
-              mechanically causes crime. Equal weighting keeps the method transparent for a public
-              audience.
-            </p>
-          </article>
+      {/* Left floating panel: methodology */}
+      <aside className="fmap-panel fmap-panel--left">
+        <p className="fmap-panel__kicker">Page 7 · Priority Places</p>
+        <h2 className="fmap-panel__title">Crime Vulnerability Index</h2>
+        <p className="fmap-panel__desc">
+          This final synthesis combines crime with structural indicators into a comparative index.
+          It is not a causal model — it shows where multiple pressures stack up most clearly.
+        </p>
 
-          <article className="panel-card">
-            <p className="panel-card__eyebrow">Selected place</p>
-            <h3>{activeLsoa?.name ?? 'Choose an area'}</h3>
-            {activeLsoa ? (
-              <div className="metric-list">
-                <div>
-                  <span>Borough</span>
-                  <strong>{activeLsoa.borough}</strong>
-                </div>
-                <div>
-                  <span>Index score</span>
-                  <strong>{formatPercent(activeLsoa.priorityIndex)}</strong>
-                </div>
-                <div>
-                  <span>Crime rate</span>
-                  <strong>{formatRate(activeLsoa.crimeRate)}</strong>
-                </div>
-                <div>
-                  <span>Unemployment</span>
-                  <strong>{formatPercent(activeLsoa.unemployment)}</strong>
-                </div>
-                <div>
-                  <span>Private renting</span>
-                  <strong>{formatPercent(activeLsoa.privateRenting)}</strong>
-                </div>
-                <div>
-                  <span>Household deprivation</span>
-                  <strong>{formatPercent(activeLsoa.deprivation)}</strong>
-                </div>
-                <div>
-                  <span>Bad health</span>
-                  <strong>{formatPercent(activeLsoa.badHealth)}</strong>
-                </div>
-              </div>
-            ) : (
-              <p>Click a neighbourhood to inspect its index profile.</p>
-            )}
-          </article>
-
-          <RankingList
-            title="Highest index scores"
-            items={summary.structural.priorityPlaces.slice(0, 10).map((place) => ({
-              title: place.name,
-              subtitle: place.borough,
-              value: formatPercent(place.priorityIndex),
-              note: `Crime ${formatRate(place.crimeRate)} / Unemployment ${formatPercent(
-                place.unemployment,
-              )}`,
-            }))}
-          />
+        <div className="fmap-index-legend">
+          <div className="fmap-index-legend__item">
+            <span className="fmap-index-legend__dot fmap-index-legend__dot--high" />
+            <span>High crime + high vulnerability</span>
+          </div>
+          <div className="fmap-index-legend__item">
+            <span className="fmap-index-legend__dot fmap-index-legend__dot--mid" />
+            <span>Moderate combined pressure</span>
+          </div>
+          <div className="fmap-index-legend__item">
+            <span className="fmap-index-legend__dot fmap-index-legend__dot--low" />
+            <span>Lower combined risk</span>
+          </div>
         </div>
-      </section>
 
-      <Takeaway
-        title="Takeaway"
-        text="The priority map pulls the story together. The highest-ranked places are not simply the ones with the highest crime rates; they are places where crime coincides with broader patterns of exclusion, insecurity, and neighbourhood vulnerability."
-      />
+        <p className="fmap-panel__note">
+          Equal weights across crime rate, unemployment, private renting, deprivation, bad health,
+          overcrowding, and youth share. Robust min-max scaling reduces outlier pull.
+        </p>
+
+        <div className="fmap-takeaway">
+          The highest-ranked places are not just high-crime — they are places where crime
+          coincides with broader exclusion, insecurity, and vulnerability.
+        </div>
+      </aside>
+
+      {/* Right floating panel: selected place + ranking */}
+      <aside className="fmap-panel fmap-panel--right">
+        <p className="fmap-panel__kicker">Selected place</p>
+        <h3 className="fmap-panel__title">{activeLsoa?.name ?? 'Click a neighbourhood'}</h3>
+
+        {activeLsoa ? (
+          <div className="metric-list">
+            <div>
+              <span>Borough</span>
+              <strong>{activeLsoa.borough}</strong>
+            </div>
+            <div>
+              <span>Index score</span>
+              <strong>{formatPercent(activeLsoa.priorityIndex)}</strong>
+            </div>
+            <div>
+              <span>Crime rate</span>
+              <strong>{formatRate(activeLsoa.crimeRate)}</strong>
+            </div>
+            <div>
+              <span>Unemployment</span>
+              <strong>{formatPercent(activeLsoa.unemployment)}</strong>
+            </div>
+            <div>
+              <span>Private renting</span>
+              <strong>{formatPercent(activeLsoa.privateRenting)}</strong>
+            </div>
+            <div>
+              <span>Household deprivation</span>
+              <strong>{formatPercent(activeLsoa.deprivation)}</strong>
+            </div>
+            <div>
+              <span>Bad health</span>
+              <strong>{formatPercent(activeLsoa.badHealth)}</strong>
+            </div>
+          </div>
+        ) : (
+          <p className="fmap-panel__desc">Click a neighbourhood to inspect its index profile.</p>
+        )}
+
+        <div className="fmap-section-label" style={{ marginTop: '0.9rem' }}>
+          Highest index scores
+        </div>
+        <ol className="cmd__ranking">
+          {summary.structural.priorityPlaces.slice(0, 10).map((place, i) => (
+            <li key={place.name} className="cmd__ranking__item">
+              <span className="cmd__ranking__rank">{i + 1}</span>
+              <div className="cmd__ranking__body">
+                <strong>{place.name}</strong>
+                <small>{place.borough}</small>
+              </div>
+              <span className="cmd__ranking__value">{formatPercent(place.priorityIndex)}</span>
+            </li>
+          ))}
+        </ol>
+      </aside>
     </div>
   );
 };

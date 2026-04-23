@@ -16,6 +16,7 @@ type HotspotMapProps = {
   selectedCell: HotspotCell | null;
   onSelectCell: (cell: HotspotCell) => void;
   onDrillDown?: (cell: HotspotCell) => void;
+  fillContainer?: boolean;
 };
 
 const londonCenter: [number, number] = [51.5074, -0.1278];
@@ -111,6 +112,7 @@ const HotspotMap = ({
   selectedCell,
   onSelectCell,
   onDrillDown,
+  fillContainer = false,
 }: HotspotMapProps) => {
   const [viewBounds, setViewBounds] = useState<LatLngBounds | null>(null);
   const [zoom, setZoom] = useState(10);
@@ -127,7 +129,10 @@ const HotspotMap = ({
 
   return (
     <div className="map-card">
-      <div className="map-stage" style={{ height: 720 }}>
+      <div
+        className={`map-stage${fillContainer ? ' map-stage--fill' : ''}`}
+        style={fillContainer ? undefined : { height: 720 }}
+      >
         <MapContainer
           center={londonCenter}
           zoom={10}
