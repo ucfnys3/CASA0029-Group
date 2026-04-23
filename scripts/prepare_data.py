@@ -749,6 +749,153 @@ def build_background_chart_assets() -> Dict[str, Any]:
     }
 
 
+def spearman_r(x: List[float], y: List[float]) -> float:
+    """Compute Spearman correlation between two lists."""
+
+    def rank(values: List[float]) -> List[float]:
+        sorted_idx = sorted(range(len(values)), key=lambda i: values[i])
+        ranks = [0.0] * len(values)
+        i = 0
+        while i < len(sorted_idx):
+            j = i
+            while j < len(sorted_idx) - 1 and values[sorted_idx[j + 1]] == values[sorted_idx[j]]:
+                j += 1
+            avg_rank = (i + j) / 2 + 1
+            for k in range(i, j + 1):
+                ranks[sorted_idx[k]] = avg_rank
+            i = j + 1
+        return ranks
+
+    n = len(x)
+    if n == 0:
+        return 0
+    rx, ry = rank(x), rank(y)
+    mean_rx = sum(rx) / n
+    mean_ry = sum(ry) / n
+    num = sum((rx[i] - mean_rx) * (ry[i] - mean_ry) for i in range(n))
+    den = (
+        sum((r - mean_rx) ** 2 for r in rx)
+        * sum((r - mean_ry) ** 2 for r in ry)
+    ) ** 0.5
+    return num / den if den != 0 else 0
+
+
+def simple_ols(x: List[float], y: List[float]) -> Tuple[float, float, float]:
+    """Returns (slope, intercept, r_squared)."""
+    n = len(x)
+    if n == 0:
+        return 0, 0, 0
+    mean_x = sum(x) / n
+    mean_y = sum(y) / n
+    ss_xy = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
+    ss_xx = sum((xi - mean_x) ** 2 for xi in x)
+    slope = ss_xy / ss_xx if ss_xx != 0 else 0
+    intercept = mean_y - slope * mean_x
+    y_pred = [slope * xi + intercept for xi in x]
+    ss_res = sum((y[i] - y_pred[i]) ** 2 for i in range(n))
+    ss_tot = sum((yi - mean_y) ** 2 for yi in y)
+    r2 = 1 - ss_res / ss_tot if ss_tot != 0 else 0
+    return round(slope, 4), round(intercept, 4), round(r2, 4)
+
+
+def compute_research_stats() -> None:
+    lsoa_path = OUTPUT_ROOT / "lsoa.geojson"
+    if not lsoa_path.exists():
+        print(f"Warning: {lsoa_path} does not exist; skipping research stats.")
+        return
+
+    lsoa_geojson = read_json(lsoa_path)
+    features = lsoa_geojson.get("features", [])
+    if not features:
+        print(f"Warning: {lsoa_path} has no features; skipping research stats.")
+        return
+
+    field_map = {
+        "crime_rate": "crimeRate",
+        "unemployment_rate": "unemployment",
+        "private_renting_rate": "privateRenting",
+        "deprivation_score": "deprivation",
+        "bad_health_rate": "badHealth",
+        "overcrowding_rate": "overcrowding",
+        "youth_share": "youthShare",
+        "population_density": "populationDensity",
+    }
+    variable_labels = {
+        "unemployment_rate": "Unemployment Rate",
+        "private_renting_rate": "Private Renting Rate",
+        "deprivation_score": "Deprivation Score",
+        "bad_health_rate": "Bad Health Rate",
+        "overcrowding_rate": "Overcrowding Rate",
+        "youth_share": "Youth Share",
+        "population_density": "Population Density",
+    }
+
+    rows: List[Dict[str, float]] = []
+    for feature in features:
+        properties = feature.get("properties", {})
+        values = {
+            semantic_name: to_float(properties.get(runtime_name))
+            for semantic_name, runtime_name in field_map.items()
+        }
+        if any(value is None for value in values.values()):
+            continue
+        rows.append({key: value for key, value in values.items() if value is not None})
+
+    if not rows:
+        print("Warning: no complete LSOA rows available for research stats.")
+        return
+
+    crime_values = [row["crime_rate"] for row in rows]
+    correlations = []
+    for variable, label in variable_labels.items():
+        x_values = [row[variable] for row in rows]
+        n_pairs = len(x_values)
+        spearman = spearman_r(x_values, crime_values)
+        slope, intercept, r_squared = simple_ols(x_values, crime_values)
+        # Significance based on Spearman magnitude only — R² is suppressed by
+        # extreme outliers (Westminster, City of London) and is not a reliable
+        # significance indicator here. ρ > 0.25 with n ≈ 4600 is p << 0.001.
+        significant = abs(spearman) > 0.25
+        direction = "higher" if spearman >= 0 else "lower"
+        strength = "consistently" if significant else "weakly"
+        # Build scatter sample (≤500 evenly-spaced points) for front-end plots
+        step = max(1, n_pairs // 500)
+        scatter_sample = [
+            {"x": round(x_values[i], 4), "y": round(crime_values[i], 2)}
+            for i in range(0, n_pairs, step)
+        ]
+        correlations.append(
+            {
+                "variable": variable,
+                "label": label,
+                "spearman": round(spearman, 4),
+                "r_squared": r_squared,
+                "slope": slope,
+                "intercept": round(intercept, 4),
+                "n": n_pairs,
+                "significant": significant,
+                "description": (
+                    f"Areas with higher {label.lower()} {strength} show {direction} crime rates"
+                ),
+                "scatterSample": scatter_sample,
+            }
+        )
+
+    correlations.sort(key=lambda item: abs(item["spearman"]), reverse=True)
+    write_json(
+        OUTPUT_ROOT / "research_stats.json",
+        {
+            "correlations": correlations,
+            "meta": {
+                "n_lsoa": len(rows),
+                "method": "Spearman rank correlation + simple OLS regression",
+                "crime_variable": "crime_rate_per_1000",
+                "data_year": "2021 Census + 2025 Q4 Crime",
+            },
+        },
+    )
+
+
 def main() -> None:
     ensure_dirs()
     structural_geojson, structural_summary, lsoa_lookup = build_structural_geojson()
@@ -779,7 +926,9 @@ def main() -> None:
         },
     )
 
+    compute_research_stats()
     print(f"Prepared runtime data in {OUTPUT_ROOT}")
+    print(f"Prepared research stats in {OUTPUT_ROOT / 'research_stats.json'}")
 
 
 if __name__ == "__main__":

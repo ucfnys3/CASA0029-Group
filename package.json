@@ -10,10 +10,16 @@
     "prepare-data": "python scripts/prepare_data.py"
   },
   "dependencies": {
+    "@deck.gl/aggregation-layers": "^9.3.1",
+    "@deck.gl/layers": "^9.3.1",
+    "@deck.gl/react": "^9.3.1",
+    "deck.gl": "^9.3.1",
     "leaflet": "^1.9.4",
+    "maplibre-gl": "^5.23.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1",
+    "react-map-gl": "^8.1.1",
     "react-router-dom": "^6.30.1"
   },
   "devDependencies": {

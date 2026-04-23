@@ -8,184 +8,255 @@ import Takeaway from '../../components/Takeaway';
 import { useJsonData } from '../../hooks/useJsonData';
 import type { BackgroundChartsData } from '../../types/data';
 
-const responseSources = [
+/* ── Static card data ───────────────────────────────────────── */
+
+const problemCards = [
   {
-    label: 'Mayor of London: Police and Crime Plan 2025-2029',
-    href:
-      'https://www.london.gov.uk/programmes-strategies/mayors-office-policing-and-crime-mopac/mayors-police-and-crime-plan-2025-2029',
+    img: '/images/intro/crime-rising.jpg',
+    alt: 'London street at night',
+    stat: 'Top 15',
+    statLabel: 'European cities by crime rate',
+    title: 'Crime is rising again',
+    body:
+      'London now ranks among Europe\'s 15 highest-crime cities. Recorded offences have risen for the second consecutive year, reversing progress made during earlier reform periods.',
+    source: 'Evening Standard, 2024; Mayor of London data',
   },
   {
-    label: 'London Assembly: response to the draft Police and Crime Plan',
-    href:
-      'https://www.london.gov.uk/who-we-are/what-london-assembly-does/london-assembly-work/london-assembly-publications/response-mayors-draft-police-and-crime-plan-2025-29',
+    img: '/images/intro/trust-fallen.jpg',
+    alt: 'Londoners and police',
+    stat: '45%',
+    statLabel: 'public confidence in 2025',
+    title: 'Public trust has collapsed',
+    body:
+      'Just 45% of Londoners say the police are doing a good job — the lowest level recorded in a decade. Falling legitimacy undermines community cooperation, making informal crime prevention harder.',
+    source: 'London Datastore, 2025',
   },
   {
-    label: 'ONS: Crime in England and Wales, year ending March 2025',
-    href:
-      'https://www.ons.gov.uk/peoplepopulationandcommunity/crimeandjustice/bulletins/crimeinenglandandwales/yearendingmarch2025',
+    img: '/images/intro/policing-gap.jpg',
+    alt: 'Metropolitan Police patrol',
+    stat: '↑ ≠ ↓',
+    statLabel: 'More policing, same results',
+    title: 'Enforcement alone is not working',
+    body:
+      'Despite sustained investment in officer numbers and high-visibility enforcement, crime patterns remain stubbornly persistent. The gap between resource and outcome demands a structural explanation.',
+    source: 'Mayor\'s Police and Crime Plan 2025–29',
   },
 ];
 
-const theorySources = [
+const theoryCards = [
   {
-    title: 'Social disorganisation theory',
-    text:
-      'Neighbourhood crime is shaped by local capacity for informal social control. Concentrated disadvantage, residential instability, and weak community networks can make it harder for places to collectively manage risk.',
-    source: 'Sampson and Groves, 1989; Shaw and McKay tradition',
-    href:
-      'https://nij.ojp.gov/library/publications/community-structure-and-crime-testing-social-disorganization-theory',
+    img: '/images/intro/social-disorg.jpg',
+    alt: 'London council estate',
+    label: 'Theory 01',
+    title: 'Social Disorganisation Theory',
+    body:
+      'Communities with weak social bonds, high residential turnover, and concentrated disadvantage struggle to regulate themselves collectively. Where informal control breaks down, crime can fill the gap.',
+    citation: 'Shaw & McKay, 1942; Sampson & Groves, 1989',
+    href: 'https://nij.ojp.gov/library/publications/community-structure-and-crime-testing-social-disorganization-theory',
   },
   {
-    title: 'Routine activity theory',
-    text:
-      'Crime opportunities rise where motivated offenders, suitable targets, and limited guardianship converge. This helps explain why central activity zones and transport corridors can show intense recorded crime even when resident deprivation is not the only driver.',
-    source: 'Cohen and Felson, 1979',
+    img: '/images/intro/routine-activity.jpg',
+    alt: 'London tube commuters at night',
+    label: 'Theory 02',
+    title: 'Routine Activity Theory',
+    body:
+      'Crime emerges when a motivated offender encounters a suitable target in the absence of capable guardianship. Everyday urban routines — commuting, commerce, nightlife — shape these convergences.',
+    citation: 'Cohen & Felson, 1979',
     href: 'https://ojp.gov/ncjrs/virtual-library/abstracts/social-change-and-crime-rate-trends-routine-activity-approach',
   },
   {
-    title: 'Structural vulnerability',
-    text:
-      'The project treats unemployment, deprivation, housing pressure, overcrowding, health, and population density as contextual conditions. They do not prove individual causation, but they help explain why risk is spatially uneven.',
-    source: 'Project structural indicators, 2021 LSOA analysis',
+    img: '/images/intro/structural-vuln.jpg',
+    alt: 'London inequality and housing',
+    label: 'Our Framework',
+    title: 'Structural Vulnerability',
+    body:
+      'This atlas treats unemployment, housing insecurity, deprivation, poor health, overcrowding, and youth exclusion as contextual conditions that make crime more likely — not as individual characteristics that determine behaviour.',
+    citation: 'Project structural indicators — 2021 LSOA analysis',
     href: '#/mapping-vulnerability',
   },
 ];
 
+/* ── Simple sparkline SVG ───────────────────────────────────── */
+
+const Sparkline = ({ values }: { values: number[] }) => {
+  if (values.length < 2) return null;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const W = 80;
+  const H = 28;
+  const pts = values
+    .map((v, i) => {
+      const x = (i / (values.length - 1)) * W;
+      const y = H - ((v - min) / range) * H;
+      return `${x},${y}`;
+    })
+    .join(' ');
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width={W}
+      height={H}
+      className="intro-sparkline"
+      aria-hidden="true"
+    >
+      <polyline
+        points={pts}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};
+
+/* ── Page component ─────────────────────────────────────────── */
+
 const IntroductionPage = () => {
-  const { data: charts, loading, error } =
-    useJsonData<BackgroundChartsData>('/data/backgroundCharts.json');
+  const { data: charts } = useJsonData<BackgroundChartsData>('/data/backgroundCharts.json');
 
-  if (loading) {
-    return <div className="shell-width page-shell">Loading introduction...</div>;
-  }
-
-  if (!charts || error) {
-    return (
-      <div className="shell-width page-shell">
-        Could not load the introduction charts. {error}
-      </div>
-    );
-  }
+  const crimeValues = charts?.recordedCrime.map((d) => d.value) ?? [];
+  const confidenceValues = charts?.policeConfidence.map((d) => d.value ?? 0) ?? [];
+  const strengthValues = charts?.policeForceStrength.map(
+    (d) => d.policeOfficerStrength,
+  ) ?? [];
 
   return (
     <div className="shell-width page-shell introduction-page">
+
+      {/* ── Page header ── */}
       <section className="intro-page-heading">
-        <p className="intro-page-heading__label">Page 2 / Introduction and background</p>
-        <h1>Why London’s crime problem persists</h1>
+        <p className="intro-page-heading__label">Introduction & Background</p>
+        <h1>Why London's crime problem persists</h1>
         <p>
-          This page sets up the atlas question. London is not short of policy attention,
-          policing reform, or public concern. Yet recorded crime, uneven borough-level change,
-          and falling confidence point to a deeper spatial problem: safety is produced through
-          neighbourhood conditions as well as enforcement.
+          London is not short of policy attention or policing resource. Yet recorded crime,
+          falling public confidence, and persistent spatial concentration point to a deeper
+          structural question: what kinds of places carry risk — and why?
         </p>
       </section>
 
-      <section className="intro-narrative-row intro-narrative-row--problem">
-        <div className="intro-narrative-copy">
-          <span>01 / The pressure</span>
-          <h2>Recorded crime remains a visible city-wide concern.</h2>
-          <p>
-            The project data show recent recorded crime moving unevenly across time and boroughs.
-            This does not mean every Londoner experiences risk in the same way. It means that
-            city-level headlines need to be broken down geographically before they can explain
-            where public safety pressure is accumulating.
-          </p>
-          <p>
-            The first two charts use the project’s borough-series data. They frame the problem
-            before the site moves into interactive maps.
-          </p>
-        </div>
-        <div className="intro-chart-pair">
-          <GovLineChartCard
-            title="Recorded crime trend"
-            legend="Total offences"
-            data={charts.recordedCrime}
-            yLabel="Number"
-          />
-          <BoroughChangeChart data={charts.boroughChange} />
-        </div>
-      </section>
-
-      <section className="intro-narrative-row intro-narrative-row--response">
-        <div className="intro-chart-pair">
-          <GovLineChartCard
-            title="Confidence in the police"
-            legend="Public confidence"
-            data={charts.policeConfidence}
-            yLabel="Percent"
-            valueFormatter={(value) => `${Math.round(value)}%`}
-          />
-          <PoliceStrengthChart data={charts.policeForceStrength} />
-        </div>
-        <div className="intro-narrative-copy">
-          <span>02 / The response</span>
-          <h2>More policy effort does not automatically resolve the pattern.</h2>
-          <p>
-            London’s current policing agenda emphasises prevention, partnership work, confidence,
-            neighbourhood policing, and harm reduction. Those are substantial interventions, but
-            the public-confidence data remind us that institutional response and public legitimacy
-            do not move in a simple straight line.
-          </p>
-          <p>
-            This is why the site avoids treating crime only as a policing output. The maps ask
-            what kinds of places repeatedly sit closer to recorded risk, and what structural
-            conditions those places share.
-          </p>
-          <div className="intro-source-list" aria-label="Background sources">
-            {responseSources.map((source) => (
-              <a href={source.href} target="_blank" rel="noreferrer" key={source.href}>
-                {source.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="intro-theory-section">
-        <div className="intro-theory-section__header">
-          <span>03 / From enforcement to explanation</span>
-          <h2>The atlas turns from incidents to neighbourhood vulnerability.</h2>
-          <p>
-            Criminological theory helps explain why the rest of the project maps deprivation,
-            housing pressure, health, youth concentration, overcrowding, and labour-market
-            insecurity alongside crime. These theories are lenses for interpretation, not claims
-            that poverty or identity mechanically causes crime.
-          </p>
-        </div>
-        <div className="intro-theory-grid">
-          {theorySources.map((item) => (
-            <article className="intro-theory-card" key={item.title}>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-              <a href={item.href} target={item.href.startsWith('#') ? undefined : '_blank'} rel="noreferrer">
-                {item.source}
-              </a>
+      {/* ── Section A: The Problem — 3 image cards ── */}
+      <section className="intro-problem-section">
+        <p className="intro-section-label">01 / The Problem</p>
+        <div className="intro-problem-grid">
+          {problemCards.map((card, i) => (
+            <article className="intro-problem-card" key={i}>
+              <div className="intro-problem-card__img-wrap">
+                <img src={card.img} alt={card.alt} loading="lazy" />
+                <div className="intro-problem-card__img-overlay" />
+              </div>
+              <div className="intro-problem-card__body">
+                <div className="intro-problem-card__stat-row">
+                  <span className="intro-problem-card__stat">{card.stat}</span>
+                  <span className="intro-problem-card__stat-label">{card.statLabel}</span>
+                  <Sparkline
+                    values={i === 0 ? crimeValues : i === 1 ? confidenceValues : strengthValues}
+                  />
+                </div>
+                <h3 className="intro-problem-card__title">{card.title}</h3>
+                <p className="intro-problem-card__desc">{card.body}</p>
+                <span className="intro-problem-card__source">{card.source}</span>
+              </div>
             </article>
           ))}
         </div>
       </section>
 
+      {/* ── Supporting charts ── */}
+      {charts && (
+        <section className="intro-charts-section">
+          <p className="intro-section-label">Evidence from the data</p>
+          <div className="intro-chart-pair">
+            <GovLineChartCard
+              title="Recorded crime trend"
+              legend="Total offences"
+              data={charts.recordedCrime}
+              yLabel="Number"
+            />
+            <GovLineChartCard
+              title="Confidence in the police"
+              legend="Public confidence"
+              data={charts.policeConfidence}
+              yLabel="Percent"
+              valueFormatter={(v) => `${Math.round(v)}%`}
+            />
+          </div>
+          <div className="intro-chart-pair" style={{ marginTop: '1rem' }}>
+            <BoroughChangeChart data={charts.boroughChange} />
+            <PoliceStrengthChart data={charts.policeForceStrength} />
+          </div>
+        </section>
+      )}
+
+      {/* ── Bridge quote ── */}
+      <div className="intro-bridge-quote">
+        <blockquote>
+          "If policing has become tougher, why does crime still feel so commonplace?"
+        </blockquote>
+        <p>
+          The answer requires looking beyond enforcement — at the structural conditions
+          that make some neighbourhoods persistently more vulnerable than others.
+        </p>
+      </div>
+
+      {/* ── Section B: Theoretical Lens — image + text cards ── */}
+      <section className="intro-theory-section">
+        <div className="intro-theory-section__header">
+          <span>02 / Theoretical Lens</span>
+          <h2>From incidents to neighbourhood conditions</h2>
+          <p>
+            Criminological theory helps explain why deprivation, housing pressure, health,
+            and labour-market insecurity are mapped alongside crime in the following pages.
+            These frameworks are interpretive lenses — not claims that poverty causes crime.
+          </p>
+        </div>
+        <div className="intro-theory-grid intro-theory-grid--image">
+          {theoryCards.map((card) => (
+            <article className="intro-theory-card intro-theory-card--image" key={card.title}>
+              <div className="intro-theory-card__img-wrap">
+                <img src={card.img} alt={card.alt} loading="lazy" />
+                <span className="intro-theory-card__label">{card.label}</span>
+              </div>
+              <div className="intro-theory-card__content">
+                <h3>{card.title}</h3>
+                <p>{card.body}</p>
+                <a
+                  href={card.href}
+                  target={card.href.startsWith('#') ? undefined : '_blank'}
+                  rel="noreferrer"
+                >
+                  {card.citation}
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Navigation ── */}
       <section className="story-grid">
         <StoryCard
-          href="/borough-crime-situation"
-          title="Borough crime situation"
-          description="Move from the background problem into borough-level rates, totals, categories, and monthly shifts."
+          href="/crime-map"
+          title="Crime Map"
+          description="Borough-level crime rates and 3D incident hotspots across London."
         />
         <StoryCard
           href="/mapping-vulnerability"
-          title="Mapping vulnerability"
-          description="Switch from policing headlines to neighbourhood conditions at LSOA scale."
+          title="Mapping Vulnerability"
+          description="Seven structural indicators at neighbourhood scale — unemployment, housing, health and more."
         />
         <StoryCard
           href="/crime-and-inequality"
-          title="Crime and inequality together"
-          description="Compare where recorded crime and structural vulnerability overlap most clearly."
+          title="Crime & Inequality"
+          description="Where crime and structural deprivation overlap — and the statistical evidence behind it."
         />
       </section>
 
       <Takeaway
         title="The bridge into the maps"
-        text="The following pages do not ask whether policing matters; they ask why crime is spatially concentrated and why some neighbourhoods carry overlapping social and economic vulnerability. That distinction keeps the analysis structural rather than stigmatising."
+        text="The following pages do not ask whether policing matters. They ask why crime is spatially concentrated — and why some neighbourhoods carry overlapping social and economic disadvantage that makes them persistently more exposed to risk."
       />
     </div>
   );
