@@ -150,10 +150,14 @@ const CrimeDeckMap = ({
     setLayerElevationScale(elevationScale);
   }, [elevationScale]);
 
-  const crimeTypeCount = useMemo(
-    () => new Set(incidents.map((incident) => incident.category).filter(Boolean)).size,
-    [incidents],
-  );
+  const topBorough = useMemo(() => {
+    const counts = new Map<string, number>();
+    filteredIncidents.forEach((i) => {
+      if (!i.borough) return;
+      counts.set(i.borough, (counts.get(i.borough) ?? 0) + 1);
+    });
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
+  }, [filteredIncidents]);
 
   const handleElevationDomain = useCallback((domain: [number, number]) => {
     const nextMax = Math.round(domain[1] ?? 0);
@@ -178,6 +182,7 @@ const CrimeDeckMap = ({
         // do not visually overwhelm the deprived residential hotspots we want
         // readers to notice — this is the key fix for the dominance problem.
         upperPercentile: 95,
+        elevationUpperPercentile: 90,
         colorScaleType: 'quantile',
         material: {
           ambient: 0.64,
@@ -318,9 +323,9 @@ const CrimeDeckMap = ({
           <small>events in one cell</small>
         </article>
         <article>
-          <span>Crime types</span>
-          <strong>{formatInteger(crimeTypeCount)}</strong>
-          <small>{selectedCrimeType === 'All' ? 'All visible' : selectedCrimeType}</small>
+          <span>Top borough</span>
+          <strong>{topBorough}</strong>
+          <small>highest incident area</small>
         </article>
       </aside>
 

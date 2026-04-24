@@ -8,6 +8,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
 
+import numpy as np
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = Path(
@@ -352,6 +354,28 @@ def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
         )
         props["priorityIndex"] = round_safe(priority_index, 2)
         props["priorityBand"] = band_for_score(priority_index) if priority_index is not None else "no-data"
+
+        composite_fields = [
+            "unemployment",
+            "privateRenting",
+            "deprivation",
+            "badHealth",
+            "overcrowding",
+            "youthShare",
+        ]
+        composite_values = [props.get(f"{metric}Score") for metric in composite_fields]
+        composite_vulnerability = (
+            sum(composite_values) / len(composite_values)
+            if all(value is not None for value in composite_values)
+            else None
+        )
+        props["compositeVulnerabilityScore"] = round_safe(composite_vulnerability, 2)
+        props["compositeVulnerabilityBand"] = (
+            band_for_score(composite_vulnerability)
+            if composite_vulnerability is not None
+            else "no-data"
+        )
+
         props["crimeDeprivationOverlap"] = round_safe(
             (
                 (props["crimeRateScore"] + props["deprivationScore"]) / 2
@@ -397,6 +421,194 @@ def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
     ]
     ranked_places.sort(key=lambda row: row["priorityIndex"], reverse=True)
 
+    def _tertile_bin(value: float | None, thresholds: Tuple[float, float]) -> int | None:
+        if value is None:
+            return None
+        low, high = thresholds
+        if value < low:
+            return 0
+        if value < high:
+            return 1
+        return 2
+
+    def _tertile_thresholds(values: List[float]) -> Tuple[float, float]:
+        if not values:
+            return (0.0, 0.0)
+        sorted_values = sorted(values)
+        n = len(sorted_values)
+        def _quantile(q: float) -> float:
+            pos = q * (n - 1)
+            lower = int(math.floor(pos))
+            upper = int(math.ceil(pos))
+            if lower == upper:
+                return sorted_values[lower]
+            frac = pos - lower
+            return sorted_values[lower] * (1 - frac) + sorted_values[upper] * frac
+        return (_quantile(1 / 3), _quantile(2 / 3))
+
+    crime_score_values = [
+        props["crimeRateScore"]
+        for feature in runtime_features
+        for props in [feature["properties"]]
+        if props.get("crimeRateScore") is not None
+        and props.get("compositeVulnerabilityScore") is not None
+    ]
+    vuln_score_values = [
+        props["compositeVulnerabilityScore"]
+        for feature in runtime_features
+        for props in [feature["properties"]]
+        if props.get("crimeRateScore") is not None
+        and props.get("compositeVulnerabilityScore") is not None
+    ]
+    crime_thresholds = _tertile_thresholds(crime_score_values)
+    vuln_thresholds = _tertile_thresholds(vuln_score_values)
+
+    for feature in runtime_features:
+        props = feature["properties"]
+        crime_score = props.get("crimeRateScore")
+        vuln_score = props.get("compositeVulnerabilityScore")
+        crime_bin = _tertile_bin(crime_score, crime_thresholds)
+        vuln_bin = _tertile_bin(vuln_score, vuln_thresholds)
+        props["bivariateCrimeBin"] = crime_bin
+        props["bivariateVulnBin"] = vuln_bin
+        props["bivariateBin"] = (
+            crime_bin * 3 + vuln_bin
+            if crime_bin is not None and vuln_bin is not None
+            else None
+        )
+
+    archetype_groups = {
+        "economic": ("unemployment", "deprivation"),
+        "housing_youth": ("privateRenting", "overcrowding", "youthShare"),
+        "health": ("badHealth",),
+    }
+    archetype_indicator_to_group = {
+        indicator: group
+        for group, indicators in archetype_groups.items()
+        for indicator in indicators
+    }
+
+    for feature in runtime_features:
+        props = feature["properties"]
+        archetype: str | None = None
+        if props.get("bivariateBin") == 8:
+            indicator_scores: Dict[str, float] = {}
+            missing = False
+            for indicator in archetype_indicator_to_group:
+                value = props.get(f"{indicator}Score")
+                if value is None:
+                    missing = True
+                    break
+                indicator_scores[indicator] = value
+            if not missing and indicator_scores:
+                sorted_inds = sorted(
+                    indicator_scores.items(), key=lambda kv: kv[1], reverse=True
+                )
+                top_indicator, top_value = sorted_inds[0]
+                second_value = sorted_inds[1][1] if len(sorted_inds) > 1 else top_value
+                top_group = archetype_indicator_to_group[top_indicator]
+                second_group = (
+                    archetype_indicator_to_group[sorted_inds[1][0]]
+                    if len(sorted_inds) > 1
+                    else top_group
+                )
+                if top_value - second_value < 3 and top_group != second_group:
+                    archetype = "mixed"
+                else:
+                    archetype = top_group
+        props["archetype"] = archetype
+        props["archetypeDominantScore"] = (
+            None
+            if archetype is None or archetype == "mixed"
+            else round_safe(
+                max(
+                    props.get(f"{indicator}Score") or 0
+                    for indicator in archetype_groups[archetype]
+                ),
+                2,
+            )
+        )
+
+    # --- P6 counterfactual OLS ---
+    # Fit crimeRate ~ 6 structural indicators + populationDensity (+ intercept).
+    # Front-end uses beta to simulate "what if indicator X were proportionally
+    # reduced by k%"; framing is strictly correlational, not causal.
+    ols_features = [
+        "unemployment",
+        "privateRenting",
+        "deprivation",
+        "badHealth",
+        "overcrowding",
+        "youthShare",
+        "populationDensity",
+    ]
+    ols_rows: List[Tuple[str, float, List[float]]] = []
+    for feature in runtime_features:
+        props = feature["properties"]
+        if props.get("crimeRate") is None:
+            continue
+        values = [props.get(key) for key in ols_features]
+        if any(value is None for value in values):
+            continue
+        ols_rows.append((props["code"], float(props["crimeRate"]), [float(v) for v in values]))
+
+    model_payload: Dict[str, Any] = {}
+    if ols_rows:
+        design = np.array([[1.0] + row[2] for row in ols_rows])
+        target = np.array([row[1] for row in ols_rows])
+        xtx = design.T @ design
+        beta = np.linalg.solve(xtx, design.T @ target)
+        fitted = design @ beta
+        residuals = target - fitted
+        n_obs, n_params = design.shape
+        dof = max(n_obs - n_params, 1)
+        rss = float(residuals @ residuals)
+        tss = float(((target - target.mean()) ** 2).sum())
+        r_squared = 1.0 - rss / tss if tss > 0 else 0.0
+        sigma2 = rss / dof
+        cov = sigma2 * np.linalg.inv(xtx)
+        se = np.sqrt(np.diag(cov))
+        t_stats = beta / se
+
+        predicted_by_code = {row[0]: float(fitted[i]) for i, row in enumerate(ols_rows)}
+        feature_means = {
+            key: round_safe(float(design[:, i + 1].mean()), 3)
+            for i, key in enumerate(ols_features)
+        }
+
+        model_payload = {
+            "target": "crimeRate",
+            "targetUnit": "crimes per 1000 residents (2025 Q4)",
+            "intercept": {
+                "coefficient": round_safe(float(beta[0]), 4),
+                "standardError": round_safe(float(se[0]), 4),
+                "tStatistic": round_safe(float(t_stats[0]), 2),
+            },
+            "predictors": [
+                {
+                    "key": key,
+                    "coefficient": round_safe(float(beta[i + 1]), 4),
+                    "standardError": round_safe(float(se[i + 1]), 4),
+                    "tStatistic": round_safe(float(t_stats[i + 1]), 2),
+                    "mean": feature_means[key],
+                }
+                for i, key in enumerate(ols_features)
+            ],
+            "rSquared": round_safe(float(r_squared), 4),
+            "observations": int(n_obs),
+            "residualDegreesOfFreedom": int(dof),
+            "targetMean": round_safe(float(target.mean()), 3),
+            "predictedMean": round_safe(float(fitted.mean()), 3),
+        }
+
+        for feature in runtime_features:
+            props = feature["properties"]
+            code = props.get("code")
+            props["predictedCrimeRate"] = round_safe(predicted_by_code.get(code), 2)
+    else:
+        for feature in runtime_features:
+            feature["properties"]["predictedCrimeRate"] = None
+
     structural_geojson = {"type": "FeatureCollection", "features": runtime_features}
 
     summary_rows = [
@@ -434,6 +646,7 @@ def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
             for row in summary_rows[:8]
         ],
         "priorityPlaces": ranked_places[:15],
+        "counterfactualModel": model_payload,
     }
 
     return structural_geojson, {"boroughPopulation": borough_population, **structural_summary}, lsoa_lookup
@@ -908,6 +1121,11 @@ def main() -> None:
     write_json(OUTPUT_ROOT / "lsoa.geojson", structural_geojson)
     write_json(OUTPUT_ROOT / "boroughs.geojson", borough_geojson)
     write_json(OUTPUT_ROOT / "backgroundCharts.json", background_charts)
+    if structural_summary.get("counterfactualModel"):
+        write_json(
+            OUTPUT_ROOT / "model_coefficients.json",
+            structural_summary["counterfactualModel"],
+        )
     write_json(
         OUTPUT_ROOT / "summary.json",
         {
