@@ -37,10 +37,42 @@ export interface LsoaProperties {
   populationDensityScore: number | null;
   priorityIndex: number | null;
   priorityBand: string;
+  compositeVulnerabilityScore: number | null;
+  compositeVulnerabilityBand: string;
+  bivariateBin: number | null;
+  bivariateCrimeBin: number | null;
+  bivariateVulnBin: number | null;
+  archetype: string | null;
+  archetypeDominantScore: number | null;
   crimeDeprivationOverlap: number | null;
   crimeRentingOverlap: number | null;
   crimeUnemploymentOverlap: number | null;
+  predictedCrimeRate: number | null;
   [key: string]: string | number | null;
+}
+
+export interface ModelPredictor {
+  key: string;
+  coefficient: number;
+  standardError: number;
+  tStatistic: number;
+  mean: number;
+}
+
+export interface CounterfactualModel {
+  target: string;
+  targetUnit: string;
+  intercept: {
+    coefficient: number;
+    standardError: number;
+    tStatistic: number;
+  };
+  predictors: ModelPredictor[];
+  rSquared: number;
+  observations: number;
+  residualDegreesOfFreedom: number;
+  targetMean: number;
+  predictedMean: number;
 }
 
 export type BoroughGeoJson = FeatureCollection<Geometry, BoroughProperties>;
