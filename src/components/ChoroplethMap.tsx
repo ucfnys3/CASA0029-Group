@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { FeatureCollection, Geometry } from 'geojson';
-import type { PathOptions } from 'leaflet';
+import type { LeafletMouseEvent, PathOptions } from 'leaflet';
 import { GeoJSON, MapContainer, TileLayer } from 'react-leaflet';
 import { PALETTES, type PaletteName } from '../lib/colors';
 import { buildQuantileBreaks, paletteForValue } from '../lib/stats';
@@ -21,11 +21,14 @@ type ChoroplethMapProps<T extends BaseMapProperties> = {
   legendTitle: string;
   selectedCode?: string | null;
   onSelect?: (feature: T) => void;
+  onHover?: (feature: T, event: LeafletMouseEvent) => void;
+  onHoverEnd?: () => void;
   valueFormatter: (value: number | null) => string;
   caption?: string;
   height?: number;
   fillContainer?: boolean;
   compact?: boolean;
+  showLegend?: boolean;
   children?: ReactNode;
 };
 
@@ -38,11 +41,14 @@ const ChoroplethMap = <T extends BaseMapProperties>({
   legendTitle,
   selectedCode,
   onSelect,
+  onHover,
+  onHoverEnd,
   valueFormatter,
   caption,
   height = 560,
   fillContainer = false,
   compact = false,
+  showLegend = true,
   children,
 }: ChoroplethMapProps<T>) => {
   const palette = PALETTES[paletteName];
@@ -105,21 +111,28 @@ const ChoroplethMap = <T extends BaseMapProperties>({
             onEachFeature={(feature, layer) => {
               const properties = feature.properties as T;
               const value = properties[valueKey];
-              layer.bindTooltip(
-                `<strong>${properties.name}</strong><br/>${valueFormatter(
-                  typeof value === 'number' ? value : null,
-                )}`,
-              );
+              if (showLegend) {
+                layer.bindTooltip(
+                  `<strong>${properties.name}</strong><br/>${valueFormatter(
+                    typeof value === 'number' ? value : null,
+                  )}`,
+                );
+              }
               layer.on({
                 click: () => onSelect?.(properties),
                 mouseover: (event) => {
+                  onHover?.(properties, event);
                   event.target.setStyle({
                     weight: 1.6,
                     color: '#241b19',
                     fillOpacity: 0.95,
                   });
                 },
+                mousemove: (event) => {
+                  onHover?.(properties, event);
+                },
                 mouseout: (event) => {
+                  onHoverEnd?.();
                   event.target.setStyle(styleForProperties(properties));
                 },
               });
@@ -127,7 +140,7 @@ const ChoroplethMap = <T extends BaseMapProperties>({
           />
         </MapContainer>
 
-        {breaks.length ? (
+        {showLegend && breaks.length ? (
           <div className="map-overlay map-overlay--legend">
             <MapLegend title={legendTitle} palette={palette} breaks={breaks} formatter={valueFormatter} />
           </div>
