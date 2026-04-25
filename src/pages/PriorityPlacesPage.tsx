@@ -379,11 +379,31 @@ const PriorityPlacesPage = () => {
           </div>
         </div>
 
-        <p className="fmap-panel__note">
+        <div className="fmap-method-card">
+          <strong className="fmap-method-card__title">Why these indicators are combined</strong>
+          <p className="fmap-method-card__body">
+            These indicators are combined because they capture different sides of
+            neighbourhood pressure rather than repeating the same idea. Crime rate
+            shows the immediate recorded pattern, while unemployment, renting,
+            health, and related measures describe the wider structural context.
+            Read together, they help compare places where several pressures overlap.
+          </p>
+        </div>
+
+        <p className="fmap-panel__note fmap-panel__note--inline">
           Strictly correlational. The model describes how crime rates co-vary with
           structural indicators across London — not what would happen if a policy
           intervention changed one of them. Unobserved confounders are baked into β.
         </p>
+        <div className="fmap-method-card fmap-method-card--bottom">
+          <strong className="fmap-method-card__title">How to read this page</strong>
+          <p className="fmap-method-card__body">
+            This page should be read as a comparative index rather than as a literal
+            forecast. A higher score means several pressures appear to align in the
+            same place. It is most useful for comparing combined pressure across
+            London, not for ranking exact future risk.
+          </p>
+        </div>
       </aside>
 
       <aside className="fmap-panel fmap-panel--right">
@@ -482,6 +502,22 @@ const PriorityPlacesPage = () => {
           </>
         ) : null}
 
+        {selectedLsoa ? (
+          <div className="fmap-method-card">
+            <strong className="fmap-method-card__title">
+              How to read this local result
+            </strong>
+            <p className="fmap-method-card__body">
+              This local result should be read as a comparison, not as a literal
+              forecast. A larger implied drop does not mean that changing one factor
+              in isolation would automatically produce the same reduction on the
+              ground. It suggests that this LSOA sits in a part of London where the
+              chosen indicator tends to co-vary with higher crime in the fitted
+              model, even after the other structural variables are held constant.
+            </p>
+          </div>
+        ) : null}
+
         <div className="fmap-takeaway">
           The coefficients say high-rent, high-youth, high-ill-health neighbourhoods
           co-occur with higher crime after controlling for each other. Moving any
@@ -494,3 +530,10 @@ const PriorityPlacesPage = () => {
 };
 
 export default PriorityPlacesPage;
+
+
+  
+ 
+  
+        
+       
