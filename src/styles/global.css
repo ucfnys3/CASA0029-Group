@@ -4334,6 +4334,10 @@ select {
   margin-top: auto;
 }
 
+.fmap-panel__note--inline {
+  margin-top: 0;
+}
+
 .fmap-section-label {
   font-size: 0.68rem;
   font-weight: 800;
@@ -4398,6 +4402,33 @@ select {
   font-size: 0.78rem;
   color: rgba(255, 238, 206, 0.82);
   line-height: 1.55;
+}
+
+.fmap-method-card {
+  padding: 0.7rem 0.8rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid rgba(230, 162, 58, 0.35);
+  border-radius: 0 8px 8px 0;
+}
+
+.fmap-method-card--bottom {
+  margin-top: auto;
+}
+
+.fmap-method-card__title {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: rgba(255, 242, 220, 0.92);
+  letter-spacing: 0.02em;
+}
+
+.fmap-method-card__body {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.58;
+  color: rgba(255, 238, 206, 0.76);
 }
 
 .fmap-index-legend {
