@@ -127,14 +127,29 @@ const IntroductionPage = () => {
     <div className="shell-width page-shell introduction-page">
 
       {/* ── Page header ── */}
-      <section className="intro-page-heading">
-        <p className="intro-page-heading__label">Introduction & Background</p>
-        <h1>Why London's crime problem persists</h1>
-        <p>
-          London is not short of policy attention or policing resource. Yet recorded crime,
-          falling public confidence, and persistent spatial concentration point to a deeper
-          structural question: what kinds of places carry risk — and why?
-        </p>
+      <section className="w-full flex flex-col items-center py-16 px-4">
+        <div className="max-w-[40rem] w-full text-center">
+          <p className="intro-section-label">
+            Introduction & Background
+          </p>
+          <p className="text-base md:text-lg text-white/70 leading-relaxed mb-6">
+            Crime has long been a significant issue in London’s development, with its
+            distribution revealing marked spatial disparities. This spatial concentration of
+            ‘crime inequality’ is often linked to poverty, housing conditions and a sense of
+            deprivation.
+          </p>
+          <p className="text-base md:text-lg text-white/70 leading-relaxed mb-6">
+            The London Crime Inequality Atlas utilises Metropolitan Police incident data from
+            the fourth quarter of 2025, linking it to socio-economic indicators from the 2021
+            Census at Lower Super Output Area (LSOA) level and the UK Multiple Deprivation
+            Index to visualise these relationships. The project examines, at a granular
+            geographical scale, the overlap between crime and vulnerability, the spatial
+            concentration driven by specific crime categories, and how structural factors such
+            as housing occupancy rates, housing pressure and economic inactivity correlate with
+            observed crime rates. It aims to provide researchers, policymakers and the public
+            with a tangible narrative to support future research.
+          </p>
+        </div>
       </section>
 
       {/* ── Section A: The Problem — 3 image cards ── */}
