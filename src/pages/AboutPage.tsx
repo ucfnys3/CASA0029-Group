@@ -1,151 +1,126 @@
 import PageHero from '../components/PageHero';
-import Takeaway from '../components/Takeaway';
-import { useJsonData } from '../hooks/useJsonData';
-import { formatCompact } from '../lib/format';
-import type { SummaryData } from '../types/data';
 
 const AboutPage = () => {
-  const { data: summary, loading, error } = useJsonData<SummaryData>('/data/summary.json');
-
-  if (loading) {
-    return <div className="shell-width page-shell">Loading project notes...</div>;
-  }
-
-  if (!summary || error) {
-    return <div className="shell-width page-shell">Could not load the about page. {error}</div>;
-  }
-
   return (
     <div className="shell-width page-shell">
       <PageHero
-        eyebrow="Page 8"
+        eyebrow="Page 7"
         title="About, methodology, and team"
-        description="This page keeps the methods readable. It explains what datasets the prototype uses, how the final comparative index is built, and where the main limitations sit."
-        note="The website is a prototype for communication and exploration. It is not intended to replace the full written appendix or the original code notebooks."
+        description="Research design, data sources, processing steps and visualization methods used in the project."
       />
-
-      <section className="about-grid">
-        <article className="panel-card">
-          <p className="panel-card__eyebrow">Data layers</p>
-          <h3>Two analytical time frames</h3>
-          <ul className="text-list">
-            <li>
-              <strong>2021 structural analysis.</strong> LSOA crime rate plus census-based
-              indicators such as unemployment, private renting, deprivation, bad health,
-              overcrowding, and youth share.
-            </li>
-            <li>
-              <strong>Q4 2025 incident exploration.</strong> Geocoded street-level incident
-              records for September, October, November, and December 2025.
-            </li>
-            <li>
-              <strong>2025 borough overview.</strong> Aggregated borough-level offence and
-              positive-outcome series used for the macro entry page.
-            </li>
-          </ul>
-        </article>
-
-        <article className="panel-card">
-          <p className="panel-card__eyebrow">Method</p>
-          <h3>How the Crime Vulnerability Index is built</h3>
-          <ul className="text-list">
-            <li>Indicators are combined at LSOA scale.</li>
-            <li>
-              The index uses equal weights across crime rate, unemployment, private renting,
-              household deprivation, bad health, overcrowding, and youth share.
-            </li>
-            <li>
-              Values are robustly min-max scaled so that extreme outliers do not dominate the
-              map.
-            </li>
-            <li>
-              The output is comparative rather than predictive. It highlights places where
-              multiple pressures coincide.
-            </li>
-          </ul>
-        </article>
-
-        <article className="panel-card">
-          <p className="panel-card__eyebrow">Key cautions</p>
-          <h3>Limits of interpretation</h3>
-          <ul className="text-list">
-            <li>These maps show area-level relationships, not individual behaviour.</li>
-            <li>
-              The 2021 structural layer and the 2025 incident layer should not be treated as the
-              same evidence type.
-            </li>
-            <li>Cross-sectional analysis identifies associations, not proof of causality.</li>
-            <li>
-              Central commercial and visitor-heavy districts can behave as outliers in crime
-              datasets.
-            </li>
-          </ul>
-        </article>
-
-        <article className="panel-card">
-          <p className="panel-card__eyebrow">Project status</p>
-          <h3>Prototype coverage</h3>
-          <div className="metric-list">
-            <div>
-              <span>LSOAs mapped</span>
-              <strong>{formatCompact(summary.home.lsoaCount)}</strong>
-            </div>
-            <div>
-              <span>Complete structural cases</span>
-              <strong>{formatCompact(summary.home.completeStructuralCount)}</strong>
-            </div>
-            <div>
-              <span>Q4 geocoded incidents</span>
-              <strong>{formatCompact(summary.home.q4IncidentCount)}</strong>
-            </div>
-            <div>
-              <span>Boroughs mapped</span>
-              <strong>{summary.overview.overviewCards.boroughsMapped}</strong>
-            </div>
-          </div>
-        </article>
-      </section>
 
       <section className="panel-grid">
         <article className="panel-card">
-          <p className="panel-card__eyebrow">Team placeholders</p>
-          <h3>Fill before final submission</h3>
-          <ul className="text-list">
-            <li>[Name] - narrative writing, page structure, and editing.</li>
-            <li>[Name] - data cleaning, preprocessing, and summary indicators.</li>
-            <li>[Name] - mapping, interaction design, and visual polish.</li>
-            <li>[Name] - QA, deployment, and final submission packaging.</li>
-          </ul>
+          <p className="panel-card__eyebrow">Research Background and Aims</p>
+          <h3>Neighbourhood‑scale inquiry into criminal spatial inequality</h3>
+          <p>
+            Criminal spatial inequality in London is predominantly documented and studied at the
+            borough level; however, analyses at this scale often struggle to capture the nuanced
+            relationship between neighbourhood‑level vulnerability and criminal inequality. This
+            project, utilising LSOA‑level data, seeks to explore this issue in greater depth.
+          </p>
+          <p>
+            Firstly, do crime hotspots spatially overlap with areas of high social vulnerability?
+            Secondly, what are the structural differences in the distribution of crime across
+            London’s neighbourhoods? To what extent do these differences reflect underlying
+            socio‑economic conditions rather than transient factors? These will be the key
+            research questions underpinning the entire project.
+          </p>
         </article>
 
         <article className="panel-card">
-          <p className="panel-card__eyebrow">AI-use placeholder</p>
-          <h3>Fill before final submission</h3>
+          <p className="panel-card__eyebrow">Datasets</p>
+          <h3>Open sources and supplementary surveys</h3>
           <p>
-            Add a short statement here describing how AI tools were used for coding support,
-            drafting, checking, or editing, along with any human review steps taken before
-            submission.
+            The project is based on several open datasets. Metropolitan Police crime incident data
+            for Q4 2025 (October to December) forms the primary dataset. Monthly GeoJSON files
+            were obtained from the UK Police open data platform (data.police.uk), with each
+            incident recorded as a point feature carrying a geographic location, crime category,
+            and LSOA code. The temporal scope of a single quarter was chosen to examine structural
+            spatial patterns while limiting the influence of seasonal variation across an extended
+            period.
+          </p>
+          <p>
+            Socioeconomic indicators at LSOA level were sourced from the 2021 England and Wales
+            Census via Nomis and the Office for National Statistics. Eight thematic tables were
+            used: economic activity status, housing tenure and situation, household deprivation
+            dimensions, general health, bedroom occupancy rating, age by broad age bands,
+            population density, and total resident population. Administrative boundary files for
+            both LSOAs and London Boroughs were obtained from the ONS Open Geography Portal.
+          </p>
+          <p>
+            Two supplementary datasets were incorporated: a public perception of neighbourhood
+            safety survey and a Police Force Strength dataset, enabling comparison between
+            recorded crime patterns, perceived safety, and policing resource distribution.
           </p>
         </article>
-      </section>
 
-      <section className="panel-card">
-        <p className="panel-card__eyebrow">References</p>
-        <h3>Main sources to cite</h3>
-        <ul className="text-list">
-          <li>Office for National Statistics, Census 2021 tables at LSOA scale.</li>
-          <li>Metropolitan Police crime data and borough-level crime dashboard exports.</li>
-          <li>Greater London Authority and London Datastore context statistics.</li>
-          <li>Project documents stored in the group folder, including the brief and appendix.</li>
-          <li>London City Hall, Police and Crime Plan 2025-2029.</li>
-          <li>Sampson and Groves (1989), social disorganisation theory.</li>
-        </ul>
-      </section>
+        <article className="panel-card">
+          <p className="panel-card__eyebrow">Data Processing</p>
+          <h3>Lightweight, attribute‑matched pipeline with robust scaling</h3>
+          <p>
+            Data pre‑processing is primarily handled via a custom Python pipeline (prepare_data.py),
+            which is invoked using the command <code>npm run prepare-data</code>. The script
+            relies on Python’s standard <code>csv</code> and <code>json</code> modules, as well as
+            NumPy, to keep it lightweight.
+          </p>
+          <p>
+            Spatial association between criminal incidents and LSOA boundaries is achieved without
+            geometric point‑in‑polygon calculations: each incident record contains an LSOA code
+            in its attributes and the pipeline uses that identifier to link incidents to LSOA
+            attributes. Aggregation to districts follows the same attribute‑matching approach.
+          </p>
+          <p>
+            Normalisation was applied so indicators on different scales are comparable. Each
+            variable was rescaled to a 0–100 range using a robust min‑max method where the
+            5th and 95th percentiles define the scaling boundaries rather than observed extremes.
+            This percentile‑based rescaling limits the influence of outliers so choropleth
+            colours reflect variation across typical LSOAs. Crime rates are expressed per 1,000
+            residents, composite vulnerability scores average the normalised dimensions, and a
+            bivariate classification cross‑tabulates crime rate tertiles with vulnerability
+            tertiles. An OLS regression linking structural indicators to LSOA crime rates is also
+            fitted, with exported coefficients supporting a counterfactual simulation feature.
+          </p>
+        </article>
 
-      <Takeaway
-        title="Before submission"
-        text="Use this page to keep the final website transparent. Readers should be able to tell what each dataset does, how the index was constructed, and where the main limitations still sit."
-      />
+        <article className="panel-card">
+          <p className="panel-card__eyebrow">Visualisation Methods</p>
+          <h3>Hexagonal aggregation and choropleth comparison</h3>
+          <p>
+            Visualisation 2 is a 3D hexagonal aggregation layer built using deck.gl’s
+            <strong> HexagonLayer</strong> and rendered on a MapLibre basemap via react‑map‑gl.
+            The layer represents the density of criminal incidents as extruded hexagonal
+            columns; users can filter by crime type and month, adjust elevation scale, and view
+            tooltips that display the number of incidents, the main crime categories, and the
+            most common administrative districts within each cell.
+          </p>
+          <p>
+            The second visualisation is a choropleth depicting LSOA and district attributes,
+            including crime rates, individual socio‑economic indicators, composite vulnerability
+            scores, and a bivariate crime‑vulnerability classification. Hover tooltips, click‑to‑
+            select interactions and dynamic variable switching enable comparative spatial
+            exploration. Statistical summaries and charts are organised alongside maps to support
+            interpretation.
+          </p>
+        </article>
+
+        <article className="panel-card">
+          <p className="panel-card__eyebrow">Use of AI Tools</p>
+          <h3>Support, debugging and configuration</h3>
+          <p>
+            Claude (claude.ai, Anthropic) was used as a debugging aid during development. Specific
+            uses included clarifying unfamiliar code patterns in the React and deck.gl stacks,
+            identifying and resolving runtime errors, and configuring the GitHub Pages deployment
+            pipeline. All decisions regarding the research framework, data selection, metric
+            construction and visual design were made by the project team.
+          </p>
+        </article>
+        <article className="panel-card">
+          <p className="panel-card__eyebrow">Teams</p>
+          <h3>Project team</h3>
+          <p>Fangzheng Zhou, Jianshu Wu, Jie Jiang, Yucan Shen</p>
+        </article>
+      </section>
     </div>
   );
 };
