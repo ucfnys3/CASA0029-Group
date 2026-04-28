@@ -87,7 +87,7 @@ const AboutPage = () => {
           <p className="panel-card__eyebrow">Visualisation Methods</p>
           <h3>Hexagonal aggregation and choropleth comparison</h3>
           <p>
-            Visualisation 2 is a 3D hexagonal aggregation layer built using deck.gl’s
+            Visualisation 1 is a 3D hexagonal aggregation layer built using deck.gl’s
             <strong> HexagonLayer</strong> and rendered on a MapLibre basemap via react‑map‑gl.
             The layer represents the density of criminal incidents as extruded hexagonal
             columns; users can filter by crime type and month, adjust elevation scale, and view
