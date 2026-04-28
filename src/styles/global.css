@@ -4601,6 +4601,340 @@ select {
   padding: 0 0.15rem;
 }
 
+.fmap-panel--profile {
+  width: 340px;
+  gap: 0.7rem;
+  padding: 1rem;
+}
+
+.fmap-profile-score-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(230, 162, 58, 0.28);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at top right, rgba(230, 162, 58, 0.16), transparent 50%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.fmap-profile-score-card__label,
+.fmap-profile-driver-card span,
+.fmap-profile-rank-card span {
+  display: block;
+  color: rgba(243, 197, 106, 0.82);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.fmap-profile-score-card__value {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 0.95;
+  color: #fff8ed;
+}
+
+.fmap-profile-score-card__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.3rem;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.fmap-profile-score-card__meta span:last-child {
+  padding: 0.17rem 0.46rem;
+  border-radius: 999px;
+  background: rgba(230, 162, 58, 0.13);
+  color: rgba(255, 238, 206, 0.9);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fmap-profile-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+  margin-top: -0.1rem;
+}
+
+.fmap-profile-actions button {
+  min-height: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(255, 238, 206, 0.82);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.fmap-profile-actions button:first-child {
+  border-color: rgba(230, 162, 58, 0.42);
+  background: rgba(230, 162, 58, 0.16);
+  color: #ffe6aa;
+}
+
+.fmap-profile-actions button:hover {
+  border-color: rgba(230, 162, 58, 0.48);
+  background: rgba(230, 162, 58, 0.12);
+  color: #fff8ed;
+  transform: translateY(-1px);
+}
+
+.fmap-profile-radar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.35rem 0.2rem 0;
+}
+
+.fmap-profile-radar-card .fmap-radar__svg {
+  max-width: 286px;
+}
+
+.fmap-profile-radar-card .fmap-radar-caption {
+  display: block;
+  width: 100%;
+  max-width: 290px;
+  min-height: 3.1rem;
+  margin: 0.35rem auto 0;
+  padding: 0 0.2rem 0.8rem;
+  text-align: center;
+}
+
+.fmap-profile-rank-card {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.72rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.fmap-profile-rank-card > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.fmap-profile-rank-card strong {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: #fff8ed;
+}
+
+.fmap-profile-rank-card__track,
+.fmap-profile-bar__track {
+  position: relative;
+  overflow: hidden;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.fmap-profile-rank-card__track span,
+.fmap-profile-bar__track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f3c56a, #e77745, #99363b);
+  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fmap-profile-rank-card p {
+  margin: 0.38rem 0 0;
+  color: var(--muted);
+  font-size: 0.69rem;
+  line-height: 1.45;
+}
+
+.fmap-profile-driver-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid rgba(230, 162, 58, 0.58);
+  border-radius: 0 9px 9px 0;
+  background: rgba(230, 162, 58, 0.08);
+}
+
+.fmap-profile-driver-card strong {
+  color: #fff8ed;
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+.fmap-profile-bars {
+  display: grid;
+  gap: 0.48rem;
+}
+
+.fmap-profile-bar {
+  display: grid;
+  gap: 0.26rem;
+}
+
+.fmap-profile-bar__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.fmap-profile-bar__header span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.fmap-profile-bar__header strong {
+  color: #fff8ed;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.fmap-profile-bar__track {
+  height: 0.36rem;
+}
+
+.fmap-profile-bar__track span {
+  background: linear-gradient(90deg, rgba(240, 188, 116, 0.92), rgba(214, 107, 61, 0.92));
+}
+
+.fmap-map-legend {
+  width: 292px;
+  max-width: 292px;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(10, 12, 18, 0.9);
+  backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.34);
+}
+
+.fmap-map-legend .map-legend__title {
+  margin-bottom: 0.48rem;
+  color: rgba(243, 197, 106, 0.82);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.fmap-map-legend .map-legend__list {
+  gap: 0.32rem;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.25;
+}
+
+.fmap-map-legend .map-legend__swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+.fmap-hover-popup {
+  position: absolute;
+  left: var(--fmap-popup-left);
+  top: var(--fmap-popup-top);
+  z-index: 780;
+  width: min(248px, calc(100% - 2rem));
+  padding: 0.68rem 0.76rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(10, 12, 18, 0.92);
+  backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.36);
+  color: var(--text);
+  pointer-events: none;
+  animation: cmd-popup-in 180ms ease both;
+}
+
+.fmap-hover-popup__label {
+  margin: 0;
+  color: rgba(243, 197, 106, 0.82);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.fmap-hover-popup h3 {
+  margin: 0.18rem 0 0.5rem;
+  overflow: hidden;
+  color: #fff8ed;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.08rem;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fmap-hover-popup__metric {
+  margin-bottom: 0.42rem;
+  border: 1px solid rgba(230, 162, 58, 0.22);
+  border-radius: 10px;
+  padding: 0.42rem 0.5rem;
+  background:
+    radial-gradient(circle at top right, rgba(230, 162, 58, 0.16), transparent 52%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.fmap-hover-popup__metric span,
+.fmap-hover-popup__row span {
+  display: block;
+  color: rgba(243, 197, 106, 0.82);
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.fmap-hover-popup__metric strong {
+  display: block;
+  margin-top: 0.14rem;
+  color: #fff8ed;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.12rem;
+  line-height: 1;
+}
+
+.fmap-hover-popup__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.fmap-hover-popup__row strong {
+  overflow: hidden;
+  color: #fff8ed;
+  font-size: 0.76rem;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ==========================================================
    Bivariate legend + scatter (Page 5 · Crime × Pressure)
    ========================================================== */

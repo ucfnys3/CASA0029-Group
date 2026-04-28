@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import type { FeatureCollection, Geometry } from 'geojson';
-import type { LeafletMouseEvent, PathOptions } from 'leaflet';
-import { GeoJSON, MapContainer, TileLayer } from 'react-leaflet';
+import type { FeatureCollection, GeoJsonObject, Geometry } from 'geojson';
+import { geoJSON, type LeafletMouseEvent, type PathOptions } from 'leaflet';
+import { GeoJSON as LeafletGeoJSON, MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { PALETTES, type PaletteName } from '../lib/colors';
 import { buildQuantileBreaks, paletteForValue } from '../lib/stats';
 import MapLegend from './MapLegend';
@@ -29,10 +29,54 @@ type ChoroplethMapProps<T extends BaseMapProperties> = {
   fillContainer?: boolean;
   compact?: boolean;
   showLegend?: boolean;
+  focusCode?: string | null;
+  resetViewKey?: number;
+  focusMaxZoom?: number;
   children?: ReactNode;
 };
 
 const londonCenter: [number, number] = [51.5074, -0.1278];
+
+const MapViewportController = <T extends BaseMapProperties>({
+  data,
+  focusCode,
+  resetViewKey,
+  compact,
+  focusMaxZoom = 14,
+}: {
+  data: FeatureCollection<Geometry, T>;
+  focusCode?: string | null;
+  resetViewKey?: number;
+  compact: boolean;
+  focusMaxZoom?: number;
+}) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!focusCode) return;
+    const feature = data.features.find((item) => item.properties?.code === focusCode);
+    if (!feature) return;
+
+    const bounds = geoJSON(feature as unknown as GeoJsonObject).getBounds();
+    if (!bounds.isValid()) return;
+
+    map.flyToBounds(bounds.pad(0.45), {
+      duration: 0.75,
+      maxZoom: focusMaxZoom,
+      paddingTopLeft: [260, 90],
+      paddingBottomRight: [390, 90],
+    });
+  }, [data, focusCode, focusMaxZoom, map]);
+
+  useEffect(() => {
+    if (resetViewKey == null || resetViewKey <= 0) return;
+    map.flyTo(londonCenter, compact ? 9.6 : 10, {
+      duration: 0.75,
+    });
+  }, [compact, map, resetViewKey]);
+
+  return null;
+};
 
 const ChoroplethMap = <T extends BaseMapProperties>({
   data,
@@ -49,6 +93,9 @@ const ChoroplethMap = <T extends BaseMapProperties>({
   fillContainer = false,
   compact = false,
   showLegend = true,
+  focusCode,
+  resetViewKey,
+  focusMaxZoom,
   children,
 }: ChoroplethMapProps<T>) => {
   const palette = PALETTES[paletteName];
@@ -104,7 +151,14 @@ const ChoroplethMap = <T extends BaseMapProperties>({
             attribution='&copy; OpenStreetMap contributors &copy; CARTO'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
-          <GeoJSON
+          <MapViewportController
+            data={data}
+            focusCode={focusCode}
+            resetViewKey={resetViewKey}
+            compact={compact}
+            focusMaxZoom={focusMaxZoom}
+          />
+          <LeafletGeoJSON
             key={`${String(valueKey)}-${selectedCode ?? 'none'}`}
             data={data as FeatureCollection}
             style={(feature) => styleForProperties(feature?.properties as T)}
