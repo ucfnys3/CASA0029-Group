@@ -48,6 +48,7 @@ type LineChartCardProps = {
   yLabel: string;
   valueFormatter?: (value: number) => string;
   minOverride?: number;
+  hideFirstYearTick?: boolean;
 };
 
 export const GovLineChartCard = ({
@@ -57,6 +58,7 @@ export const GovLineChartCard = ({
   yLabel,
   valueFormatter = compact,
   minOverride,
+  hideFirstYearTick = false,
 }: LineChartCardProps) => {
   const [selectedIndex, setSelectedIndex] = useState(() => Math.max(0, data.length - 1));
   const values = data.map((point) => point.value);
@@ -69,6 +71,7 @@ export const GovLineChartCard = ({
     .map((point, index) => `${index === 0 ? 'M' : 'L'} ${xFor(index, data.length)} ${yFor(point.value, min, max)}`)
     .join(' ');
   const ticks = yearTicks(data);
+  const visibleTicks = hideFirstYearTick ? ticks.slice(1) : ticks;
 
   return (
     <article className="gov-chart-card">
@@ -132,7 +135,7 @@ export const GovLineChartCard = ({
             </rect>
           );
         })}
-        {ticks.map(({ index, year }) => (
+        {visibleTicks.map(({ index, year }) => (
           <text key={year} className="gov-chart-card__axis" x={xFor(index, data.length)} y={chartHeight - 16} textAnchor="middle">
             {year}
           </text>

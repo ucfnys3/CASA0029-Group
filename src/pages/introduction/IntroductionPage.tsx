@@ -196,6 +196,7 @@ const IntroductionPage = () => {
               data={charts.policeConfidence}
               yLabel="Percent"
               valueFormatter={(v) => `${Math.round(v)}%`}
+              hideFirstYearTick
             />
           </div>
           <div className="intro-chart-pair" style={{ marginTop: '1rem' }}>

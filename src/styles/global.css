@@ -2253,21 +2253,31 @@ select {
 }
 
 .gov-chart-card__legend--multi {
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-left: 4.2rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 1.6rem;
+  margin-left: 6.6rem;
+  max-width: none;
+  width: calc(100% - 7rem);
+  font-size: 0.82rem;
 }
 
 .gov-chart-card__legend--multi span {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.55rem;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
 }
 
 .gov-chart-card__legend--multi i {
   display: inline-block;
-  width: 34px;
+  flex: 0 0 28px;
+  width: 28px;
   height: 3px;
 }
 
@@ -4295,7 +4305,7 @@ select {
   right: 1rem;
   top: 1rem;
   bottom: 1rem;
-  width: 290px;
+  width: 300px;
 }
 
 .fmap-panel--wide {
@@ -4529,11 +4539,14 @@ select {
   align-items: center;
   gap: 0.35rem;
   padding: 0.35rem 0 0.2rem;
+  max-width: 330px;
+  margin: 0 auto;
 }
 
 .fmap-radar__svg {
   display: block;
-  max-width: 100%;
+  width: 100%;
+  max-width: 330px;
   overflow: visible;
 }
 
@@ -5211,3 +5224,35 @@ select {
   text-align: right;
 }
 
+/* Fix Police Force Strength legend layout */
+.gov-chart-card__legend.gov-chart-card__legend--multi {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: nowrap !important;
+  gap: 2.4rem !important;
+  margin: 1rem 0 0.15rem 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  font-size: 0.86rem !important;
+}
+
+.gov-chart-card__legend.gov-chart-card__legend--multi > span,
+.gov-chart-card__legend.gov-chart-card__legend--multi > span:first-child {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.55rem !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+  flex: 0 0 auto !important;
+}
+
+.gov-chart-card__legend.gov-chart-card__legend--multi i {
+  display: inline-block !important;
+  width: 32px !important;
+  height: 3px !important;
+  flex: 0 0 32px !important;
+}
