@@ -17,6 +17,10 @@ SOURCE_ROOT = Path(
 )
 OUTPUT_ROOT = PROJECT_ROOT / "public" / "data"
 INCIDENT_OUTPUT = OUTPUT_ROOT / "incidents"
+LONDON_LSOA_2021_BOUNDARY_FILE = "London_LSOA_2021_Boundaries.geojson"
+LSOA_2021_BOUNDARY_GLOB = (
+    "Lower_layer_Super_Output_Areas_December_2021_Boundaries_EW_BSC*.geojson"
+)
 
 
 def ensure_dirs() -> None:
@@ -82,6 +86,76 @@ def load_plain_csv(path: Path) -> List[Dict[str, str]]:
         ]
 
 
+def is_lsoa_code(value: Any) -> bool:
+    text = str(value or "").strip()
+    return len(text) == 9 and text.startswith("E") and text[1:].isdigit()
+
+
+def load_lsoa_2021_boundaries() -> Dict[str, Any]:
+    candidates = sorted(SOURCE_ROOT.glob(LSOA_2021_BOUNDARY_GLOB))
+    if not candidates:
+        raise FileNotFoundError(
+            f"Could not locate the 2021 LSOA boundary GeoJSON matching {LSOA_2021_BOUNDARY_GLOB}"
+        )
+    return read_json(candidates[0])
+
+
+def is_city_of_london_lsoa(properties: Dict[str, Any]) -> bool:
+    name = str(properties.get("LSOA21NM") or "")
+    return name.startswith("City of London")
+
+
+def load_london_lsoa_2021_boundaries(london_lsoa_codes: set[str]) -> Dict[str, Any]:
+    london_path = SOURCE_ROOT / LONDON_LSOA_2021_BOUNDARY_FILE
+    if london_path.exists():
+        return read_json(london_path)
+
+    source_geojson = load_lsoa_2021_boundaries()
+    london_features = []
+    for feature in source_geojson["features"]:
+        properties = feature.get("properties", {})
+        code = properties.get("LSOA21CD")
+        if code in london_lsoa_codes or is_city_of_london_lsoa(properties):
+            london_features.append(feature)
+
+    london_geojson = {
+        "type": "FeatureCollection",
+        "crs": source_geojson.get("crs"),
+        "features": london_features,
+    }
+    write_json(london_path, london_geojson)
+    return london_geojson
+
+
+def load_borough_name_lookup() -> Dict[str, str]:
+    borough_geojson = read_json(SOURCE_ROOT / "Final_Borough_Map.geojson")
+    return {
+        feature["properties"]["GSS_CODE"]: feature["properties"]["NAME"]
+        for feature in borough_geojson["features"]
+        if feature.get("properties", {}).get("GSS_CODE")
+    }
+
+
+def load_lsoa_crime_lookup() -> Dict[str, Dict[str, Any]]:
+    borough_names = load_borough_name_lookup()
+    rows = load_plain_csv(SOURCE_ROOT / "LSOA_Crime_Rate_2021_With_Names.csv")
+    lookup: Dict[str, Dict[str, Any]] = {}
+    for row in rows:
+        code = row.get("LSOA Code")
+        if not is_lsoa_code(code):
+            continue
+        borough_code = row.get("Borough")
+        lookup[code] = {
+            "name": row.get("LSOA Name"),
+            "boroughCode": borough_code,
+            "boroughName": borough_names.get(borough_code or "", borough_code),
+            "crimeCount": to_float(row.get("Total_Crime_Count")),
+            "population": to_float(row.get("Population")),
+            "crimeRate": to_float(row.get("Crime_Rate")),
+        }
+    return lookup
+
+
 def quantile(values: List[float], proportion: float) -> float:
     if not values:
         raise ValueError("Cannot compute quantile for an empty series.")
@@ -103,7 +177,7 @@ def build_lookup(rows: Iterable[Dict[str, str]], transform) -> Dict[str, float |
     lookup: Dict[str, float | None] = {}
     for row in rows:
         code = row.get("mnemonic") or row.get("LSOA21CD")
-        if not code:
+        if not is_lsoa_code(code):
             continue
         lookup[code] = transform(row)
     return lookup
@@ -189,15 +263,17 @@ def short_month_label(value: str) -> str:
 
 
 def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Dict[str, str]]]:
-    base_geojson = read_json(SOURCE_ROOT / "LSOA_Merged_map_with_data.geojson")
+    crime_lookup = load_lsoa_crime_lookup()
+    london_lsoa_codes = set(crime_lookup)
+    base_geojson = load_london_lsoa_2021_boundaries(london_lsoa_codes)
 
     unemployment_rows = load_nomis_table(SOURCE_ROOT / "Economic activity status lsoa.csv")
     renting_rows = load_nomis_table(SOURCE_ROOT / "Tenure and house situation lsoa.csv")
     deprivation_rows = load_nomis_table(
         SOURCE_ROOT / "Households by deprivation dimensions lsoa.csv"
     )
-    health_rows = load_nomis_table(SOURCE_ROOT / "General health lsoa.csv")
-    overcrowding_rows = load_nomis_table(SOURCE_ROOT / "Occupancy rating for bedrooms lsoa.csv")
+    qualification_rows = load_nomis_table(SOURCE_ROOT / "Highest level of qualification lsoa.csv")
+    migrant_rows = load_nomis_table(SOURCE_ROOT / "Migrant Indicator lsoa.csv")
     youth_rows = load_nomis_table(SOURCE_ROOT / "Age by broad age bands lsoa .csv")
     density_rows = load_nomis_table(SOURCE_ROOT / "Population density lsoa.csv")
     residents_rows = load_nomis_table(SOURCE_ROOT / "total residents lsoa.csv")
@@ -211,20 +287,17 @@ def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
     )
     private_renting = build_lookup(renting_rows, lambda row: to_float(row.get("Private rented")))
     deprivation = build_lookup(deprivation_rows, lambda row: to_float(row.get("2021")))
-    bad_health = build_lookup(
-        health_rows,
-        lambda row: (to_float(row.get("Bad health")) or 0)
-        + (to_float(row.get("Very bad health")) or 0),
+    no_qualifications = build_lookup(
+        qualification_rows,
+        lambda row: to_float(row.get("No qualifications")),
     )
-    overcrowding = build_lookup(
-        overcrowding_rows,
-        lambda row: (to_float(row.get("Occupancy rating of bedrooms: -1")) or 0)
-        + (to_float(row.get("Occupancy rating of bedrooms: -2 or less")) or 0),
+    recent_migration = build_lookup(
+        migrant_rows,
+        lambda row: to_float(row.get("sum_migration")),
     )
     youth_share = build_lookup(
         youth_rows,
-        lambda row: (to_float(row.get("Aged 16 to 19 years")) or 0)
-        + (to_float(row.get("Aged 20 to 24 years")) or 0),
+        lambda row: to_float(row.get("Aged 20 to 24 years")),
     )
     population_density = build_lookup(density_rows, lambda row: to_float(row.get("2021")))
     total_residents = build_lookup(residents_rows, lambda row: to_float(row.get("2021")))
@@ -234,8 +307,8 @@ def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
         "unemployment": {},
         "privateRenting": {},
         "deprivation": {},
-        "badHealth": {},
-        "overcrowding": {},
+        "noQualifications": {},
+        "recentMigration": {},
         "youthShare": {},
         "populationDensity": {},
     }
@@ -246,18 +319,28 @@ def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
 
     for feature in base_geojson["features"]:
         props = feature["properties"]
-        code = props.get("LSOA11CD")
-        name = props.get("LSOA_Name") or props.get("LSOA11NM")
-        borough_name = props.get("LAD11NM")
-        crime_rate = to_float(props.get("Crime_Rate"))
-        crime_count = to_float(props.get("Total_Crime_Count"))
-        population = total_residents.get(code) or to_float(props.get("Population")) or to_float(
-            props.get("USUALRES")
-        )
+        code = props.get("LSOA21CD")
+        if not is_lsoa_code(code):
+            continue
+
+        name = props.get("LSOA21NM")
+
+        # The source boundary file is England/Wales-wide.  The crime-rate file is
+        # already a London 2021 LSOA extract, so it is the safest London mask.
+        if code not in london_lsoa_codes:
+            if name and str(name).startswith("City of London"):
+                lsoa_lookup[code] = {"name": name, "borough": "City of London"}
+            continue
+
+        crime_record = crime_lookup[code]
+        borough_name = crime_record.get("boroughName")
+        crime_rate = to_float(crime_record.get("crimeRate"))
+        crime_count = to_float(crime_record.get("crimeCount"))
+        population = total_residents.get(code) or to_float(crime_record.get("population"))
 
         runtime_props = {
             "code": code,
-            "name": name,
+            "name": name or crime_record.get("name"),
             "borough": borough_name,
             "crimeRate": round_safe(crime_rate, 2),
             "crimeCount": round_safe(crime_count, 0),
@@ -278,42 +361,38 @@ def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
                 else to_float(props.get("pct_deprived")),
                 2,
             ),
-            "badHealth": round_safe(
-                bad_health.get(code)
-                if bad_health.get(code) is not None
-                else to_float(props.get("pct_bad_health")),
+            "noQualifications": round_safe(
+                no_qualifications.get(code)
+                if no_qualifications.get(code) is not None
+                else None,
                 2,
             ),
-            "overcrowding": round_safe(
-                overcrowding.get(code)
-                if overcrowding.get(code) is not None
-                else to_float(props.get("pct_overcrowded")),
+            "recentMigration": round_safe(
+                recent_migration.get(code)
+                if recent_migration.get(code) is not None
+                else None,
                 2,
             ),
             "youthShare": round_safe(
                 youth_share.get(code)
                 if youth_share.get(code) is not None
-                else (
-                    (
-                        to_float(props.get("pct_16_19")) + to_float(props.get("pct_20_24"))
-                    )
-                    if to_float(props.get("pct_16_19")) is not None
-                    and to_float(props.get("pct_20_24")) is not None
-                    else None
-                ),
+                else to_float(props.get("pct_20_24")),
                 2,
             ),
             "populationDensity": round_safe(
                 population_density.get(code)
                 if population_density.get(code) is not None
-                else to_float(props.get("Pop_Density")),
+                else None,
                 2,
             ),
-            "newMigrantShare": round_safe(to_float(props.get("pct_new_migrant")), 2),
-            "jobDensity": round_safe(to_float(props.get("Job_Density")), 2),
+            "newMigrantShare": None,
+            "jobDensity": None,
         }
 
-        lsoa_lookup[code] = {"name": name, "borough": borough_name}
+        lsoa_lookup[code] = {
+            "name": runtime_props["name"],
+            "borough": runtime_props["borough"],
+        }
         if population is not None and borough_name:
             borough_population[borough_name] += population
 
@@ -334,8 +413,8 @@ def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
         "unemployment",
         "privateRenting",
         "deprivation",
-        "badHealth",
-        "overcrowding",
+        "noQualifications",
+        "recentMigration",
         "youthShare",
     ]
 
@@ -359,8 +438,8 @@ def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
             "unemployment",
             "privateRenting",
             "deprivation",
-            "badHealth",
-            "overcrowding",
+            "noQualifications",
+            "recentMigration",
             "youthShare",
         ]
         composite_values = [props.get(f"{metric}Score") for metric in composite_fields]
@@ -410,8 +489,8 @@ def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
                 "unemployment": props["unemployment"],
                 "privateRenting": props["privateRenting"],
                 "deprivation": props["deprivation"],
-                "badHealth": props["badHealth"],
-                "overcrowding": props["overcrowding"],
+                "noQualifications": props["noQualifications"],
+                "recentMigration": props["recentMigration"],
                 "youthShare": props["youthShare"],
             }
         )
@@ -478,9 +557,9 @@ def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
         )
 
     archetype_groups = {
-        "economic": ("unemployment", "deprivation"),
-        "housing_youth": ("privateRenting", "overcrowding", "youthShare"),
-        "health": ("badHealth",),
+        "economic": ("unemployment", "deprivation", "noQualifications"),
+        "housing_mobility": ("privateRenting", "recentMigration"),
+        "youth": ("youthShare",),
     }
     archetype_indicator_to_group = {
         indicator: group
@@ -537,8 +616,8 @@ def build_structural_geojson() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
         "unemployment",
         "privateRenting",
         "deprivation",
-        "badHealth",
-        "overcrowding",
+        "noQualifications",
+        "recentMigration",
         "youthShare",
         "populationDensity",
     ]
@@ -1028,8 +1107,8 @@ def compute_research_stats() -> None:
         "unemployment_rate": "unemployment",
         "private_renting_rate": "privateRenting",
         "deprivation_score": "deprivation",
-        "bad_health_rate": "badHealth",
-        "overcrowding_rate": "overcrowding",
+        "no_qualifications_rate": "noQualifications",
+        "recent_migration_rate": "recentMigration",
         "youth_share": "youthShare",
         "population_density": "populationDensity",
     }
@@ -1037,9 +1116,9 @@ def compute_research_stats() -> None:
         "unemployment_rate": "Unemployment Rate",
         "private_renting_rate": "Private Renting Rate",
         "deprivation_score": "Deprivation Score",
-        "bad_health_rate": "Bad Health Rate",
-        "overcrowding_rate": "Overcrowding Rate",
-        "youth_share": "Youth Share",
+        "no_qualifications_rate": "No Qualifications Rate",
+        "recent_migration_rate": "Recent Migration Rate",
+        "youth_share": "Age 20-24 Share",
         "population_density": "Population Density",
     }
 

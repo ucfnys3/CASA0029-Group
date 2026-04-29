@@ -6,6 +6,8 @@ import CrimeMapDashboard from '../pages/crime-map-dashboard/CrimeMapDashboard';
 import MappingVulnerabilityPage from '../pages/mapping-vulnerability/MappingVulnerabilityPage';
 import CrimeInequalityPage from '../pages/crime-inequality/CrimeInequalityPage';
 import PriorityPlacesPage from '../pages/priority-places/PriorityPlacesPage';
+import CrimeTypeDivergencePage from '../pages/crime-type-divergence/CrimeTypeDivergencePage';
+import AnalysisSummaryPage from '../pages/analysis-summary/AnalysisSummaryPage';
 import AboutPage from '../pages/about/AboutPage';
 
 const navigation = [
@@ -13,8 +15,10 @@ const navigation = [
   { to: '/introduction', label: 'Introduction' },
   { to: '/crime-map', label: 'Crime Map' },
   { to: '/mapping-vulnerability', label: 'Vulnerability' },
-  { to: '/crime-and-inequality', label: 'Overlap' },
-  { to: '/priority-places', label: 'Priority Places' },
+  { to: '/crime-and-inequality', label: 'Structural Analysis' },
+  { to: '/crime-type-divergence', label: 'Crime Types' },
+  { to: '/scenario-simulation', label: 'Scenario Simulation' },
+  { to: '/analysis-summary', label: 'Summary' },
   { to: '/about', label: 'About' },
 ];
 
@@ -64,20 +68,14 @@ const App = () => {
           <Route path="/recent-incidents" element={<Navigate to="/crime-map" replace />} />
           <Route path="/mapping-vulnerability" element={<MappingVulnerabilityPage />} />
           <Route path="/crime-and-inequality" element={<CrimeInequalityPage />} />
-          <Route path="/priority-places" element={<PriorityPlacesPage />} />
+          <Route path="/crime-type-divergence" element={<CrimeTypeDivergencePage />} />
+          <Route path="/priority-places" element={<Navigate to="/scenario-simulation" replace />} />
+          <Route path="/scenario-simulation" element={<PriorityPlacesPage />} />
+          <Route path="/analysis-summary" element={<AnalysisSummaryPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
       </main>
 
-      <footer className={isHome ? 'site-footer site-footer--cover' : 'site-footer'}>
-        <div className="shell-width site-footer__inner">
-          <p>
-            A narrative-first static prototype built for a CASA0029 group project using
-            London borough, LSOA, and Q4 2025 incident data already stored in the project
-            folder.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 };

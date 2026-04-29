@@ -75,7 +75,10 @@ const HalfMap = ({
         onEachFeature={(feature, layer) => {
           const properties = feature.properties as LsoaProperties;
           if (tooltipFormatter) {
-            layer.bindTooltip(tooltipFormatter(properties));
+            layer.bindTooltip(tooltipFormatter(properties), {
+              sticky: true,
+              opacity: 0.9,
+            });
           }
           layer.on({
             click: () => onSelect?.(properties),
@@ -84,6 +87,7 @@ const HalfMap = ({
             },
             mouseout: (event: LeafletMouseEvent) => {
               event.target.setStyle(styler(properties));
+              event.target.closeTooltip();
             },
           });
         }}

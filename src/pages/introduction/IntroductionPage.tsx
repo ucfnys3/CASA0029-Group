@@ -28,18 +28,18 @@ const problemCards = [
     statLabel: 'public confidence in 2025',
     title: 'Public trust has collapsed',
     body:
-      'Just 45% of Londoners say the police are doing a good job — the lowest level recorded in a decade. Falling legitimacy undermines community cooperation, making informal crime prevention harder.',
+      'Just 45% of Londoners say the police are doing a good job, the lowest level recorded in a decade. Falling legitimacy undermines community cooperation, making informal crime prevention harder.',
     source: 'London Datastore, 2025',
   },
   {
     img: '/images/intro/policing-gap.jpg',
     alt: 'Metropolitan Police patrol',
-    stat: '↑ ≠ ↓',
+    stat: 'Gap',
     statLabel: 'More policing, same results',
     title: 'Enforcement alone is not working',
     body:
-      'Despite sustained investment in officer numbers and high-visibility enforcement, crime patterns remain stubbornly persistent. The gap between resource and outcome demands a structural explanation.',
-    source: 'Mayor\'s Police and Crime Plan 2025–29',
+      'Despite sustained investment in officer numbers and high-visibility enforcement, crime patterns remain stubbornly persistent. The gap between resource and outcome makes a structural reading necessary.',
+    source: 'Mayor\'s Police and Crime Plan 2025-29',
   },
 ];
 
@@ -50,7 +50,7 @@ const theoryCards = [
     label: 'Theory 01',
     title: 'Social Disorganisation Theory',
     body:
-      'Communities with weak social bonds, high residential turnover, and concentrated disadvantage struggle to regulate themselves collectively. Where informal control breaks down, crime can fill the gap.',
+      'Communities with weak social bonds, high residential turnover, and concentrated disadvantage may struggle to regulate themselves collectively. The theory helps explain why neighbourhood context matters.',
     citation: 'Shaw & McKay, 1942; Sampson & Groves, 1989',
     href: 'https://nij.ojp.gov/library/publications/community-structure-and-crime-testing-social-disorganization-theory',
   },
@@ -60,7 +60,7 @@ const theoryCards = [
     label: 'Theory 02',
     title: 'Routine Activity Theory',
     body:
-      'Crime emerges when a motivated offender encounters a suitable target in the absence of capable guardianship. Everyday urban routines — commuting, commerce, nightlife — shape these convergences.',
+      'Crime emerges when a motivated offender encounters a suitable target in the absence of capable guardianship. Everyday urban routines such as commuting, commerce, and nightlife shape these convergences.',
     citation: 'Cohen & Felson, 1979',
     href: 'https://ojp.gov/ncjrs/virtual-library/abstracts/social-change-and-crime-rate-trends-routine-activity-approach',
   },
@@ -68,10 +68,10 @@ const theoryCards = [
     img: '/images/intro/structural-vuln.jpg',
     alt: 'London inequality and housing',
     label: 'Our Framework',
-    title: 'Structural Vulnerability',
+    title: 'Structural Pressure Framework',
     body:
-      'This atlas treats unemployment, housing insecurity, deprivation, poor health, overcrowding, and youth exclusion as contextual conditions that make crime more likely — not as individual characteristics that determine behaviour.',
-    citation: 'Project structural indicators — 2021 LSOA analysis',
+      'This atlas treats unemployment, housing insecurity, deprivation, low qualifications, recent residential mobility, and young adult transitions as contextual conditions that may shape crime exposure, not as individual characteristics that determine behaviour.',
+    citation: 'Project structural indicators - 2021 LSOA analysis',
     href: '#/mapping-vulnerability',
   },
 ];
@@ -133,21 +133,16 @@ const IntroductionPage = () => {
             Introduction & Background
           </p>
           <p className="text-base md:text-lg text-white/70 leading-relaxed mb-6">
-            Crime has long been a significant issue in London’s development, with its
-            distribution revealing marked spatial disparities. This spatial concentration of
-            ‘crime inequality’ is often linked to poverty, housing conditions and a sense of
-            deprivation.
+            Crime in London is not evenly distributed. Some places show persistent offence
+            concentration, while others carry structural pressures that may increase exposure,
+            reduce informal control, or shape the kinds of crime that become visible.
           </p>
           <p className="text-base md:text-lg text-white/70 leading-relaxed mb-6">
-            The London Crime Inequality Atlas utilises Metropolitan Police incident data from
-            the fourth quarter of 2025, linking it to socio-economic indicators from the 2021
-            Census at Lower Super Output Area (LSOA) level and the UK Multiple Deprivation
-            Index to visualise these relationships. The project examines, at a granular
-            geographical scale, the overlap between crime and vulnerability, the spatial
-            concentration driven by specific crime categories, and how structural factors such
-            as housing occupancy rates, housing pressure and economic inactivity correlate with
-            observed crime rates. It aims to provide researchers, policymakers and the public
-            with a tangible narrative to support future research.
+            The atlas therefore moves in stages. It first maps observed crime patterns, then
+            builds a crime-free structural pressure baseline from 2021 Census indicators at LSOA
+            level. The later pages compare crime with that baseline, examine where the
+            relationship holds or breaks, and use model-based scenario simulation as a
+            sensitivity test rather than a causal forecast.
           </p>
         </div>
       </section>
@@ -212,8 +207,8 @@ const IntroductionPage = () => {
           "If policing has become tougher, why does crime still feel so commonplace?"
         </blockquote>
         <p>
-          The answer requires looking beyond enforcement — at the structural conditions
-          that make some neighbourhoods persistently more vulnerable than others.
+          The answer requires looking beyond enforcement, toward the neighbourhood conditions
+          that shape exposure, informal control, mobility, and opportunity.
         </p>
       </div>
 
@@ -223,9 +218,10 @@ const IntroductionPage = () => {
           <span>02 / Theoretical Lens</span>
           <h2>From incidents to neighbourhood conditions</h2>
           <p>
-            Criminological theory helps explain why deprivation, housing pressure, health,
-            and labour-market insecurity are mapped alongside crime in the following pages.
-            These frameworks are interpretive lenses — not claims that poverty causes crime.
+            Criminological theory helps explain why deprivation, private renting, low
+            qualifications, recent migration, age structure, and labour-market insecurity are
+            mapped alongside crime in the following pages. These frameworks are interpretive
+            lenses, not claims that poverty causes crime.
           </p>
         </div>
         <div className="intro-theory-grid intro-theory-grid--image">
@@ -256,23 +252,33 @@ const IntroductionPage = () => {
         <StoryCard
           href="/crime-map"
           title="Crime Map"
-          description="Borough-level crime rates and 3D incident hotspots across London."
+          description="The observed crime baseline: where offences concentrate before structural indicators are added."
         />
         <StoryCard
           href="/mapping-vulnerability"
-          title="Mapping Vulnerability"
-          description="Seven structural indicators at neighbourhood scale — unemployment, housing, health and more."
+          title="Structural Pressure"
+          description="A crime-free structural pressure surface built from Census indicators at neighbourhood scale."
         />
         <StoryCard
           href="/crime-and-inequality"
-          title="Crime & Inequality"
-          description="Where crime and structural deprivation overlap — and the statistical evidence behind it."
+          title="Structural Analysis"
+          description="A matrix view testing where crime and structural pressure align, diverge, or require more explanation."
+        />
+        <StoryCard
+          href="/crime-type-divergence"
+          title="Crime Types"
+          description="A mechanism layer for asking whether different crime categories follow different structural logics."
+        />
+        <StoryCard
+          href="/scenario-simulation"
+          title="Scenario Simulation"
+          description="A correlational sensitivity test showing how fitted crime predictions respond to lower pressure levels."
         />
       </section>
 
       <Takeaway
         title="The bridge into the maps"
-        text="The following pages do not ask whether policing matters. They ask why crime is spatially concentrated — and why some neighbourhoods carry overlapping social and economic disadvantage that makes them persistently more exposed to risk."
+        text="The following pages do not ask whether policing matters. They ask how observed crime, structural pressure, crime type, and model sensitivity can be read together without reducing the story to a single cause."
       />
     </div>
   );

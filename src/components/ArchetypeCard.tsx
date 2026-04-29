@@ -6,9 +6,9 @@ const radarAxes: RadarAxis[] = [
   { key: 'unemploymentScore',   label: 'Unemployment', shortLabel: 'Unemp.' },
   { key: 'privateRentingScore', label: 'Renting',      shortLabel: 'Rent' },
   { key: 'deprivationScore',    label: 'Deprivation',  shortLabel: 'Deprv.' },
-  { key: 'badHealthScore',      label: 'Bad health',   shortLabel: 'Health' },
-  { key: 'overcrowdingScore',   label: 'Overcrowd',    shortLabel: 'Crowd' },
-  { key: 'youthShareScore',     label: 'Youth 16–24',  shortLabel: 'Youth' },
+  { key: 'noQualificationsScore', label: 'No qualifications', shortLabel: 'No qual.' },
+  { key: 'recentMigrationScore', label: 'Recent migration', shortLabel: 'Migr.' },
+  { key: 'youthShareScore',     label: 'Age 20-24',    shortLabel: '20-24' },
 ];
 
 type ArchetypeCardProps = {

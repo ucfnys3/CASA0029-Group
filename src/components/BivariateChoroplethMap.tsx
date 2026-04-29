@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
-import type { FeatureCollection, Geometry } from 'geojson';
-import type { LeafletMouseEvent, PathOptions } from 'leaflet';
-import { GeoJSON, MapContainer, TileLayer } from 'react-leaflet';
+import { useEffect, type ReactNode } from 'react';
+import type { Feature, FeatureCollection, Geometry } from 'geojson';
+import { geoJSON, type LeafletMouseEvent, type PathOptions } from 'leaflet';
+import { GeoJSON, MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { BIVARIATE_PALETTE, BIVARIATE_NO_DATA } from '../lib/colors';
 import type { LsoaProperties, LsoaGeoJson } from '../types/data';
 
@@ -14,10 +14,42 @@ type BivariateChoroplethMapProps = {
   onHoverEnd?: () => void;
   caption?: string;
   fillContainer?: boolean;
+  focusCode?: string | null;
+  focusMaxZoom?: number;
   children?: ReactNode;
 };
 
 const londonCenter: [number, number] = [51.5074, -0.1278];
+
+const BivariateViewportController = ({
+  data,
+  focusCode,
+  focusMaxZoom = 14.5,
+}: {
+  data: LsoaGeoJson;
+  focusCode?: string | null;
+  focusMaxZoom?: number;
+}) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!focusCode) return;
+    const feature = data.features.find((item) => item.properties?.code === focusCode);
+    if (!feature) return;
+
+    const bounds = geoJSON(feature as unknown as Feature<Geometry>).getBounds();
+    if (!bounds.isValid()) return;
+
+    map.flyToBounds(bounds.pad(0.45), {
+      duration: 0.75,
+      maxZoom: focusMaxZoom,
+      paddingTopLeft: [260, 90],
+      paddingBottomRight: [390, 90],
+    });
+  }, [data, focusCode, focusMaxZoom, map]);
+
+  return null;
+};
 
 const binLabel = (crimeBin: number | null, vulnBin: number | null): string => {
   if (crimeBin == null || vulnBin == null) return 'No data';
@@ -34,6 +66,8 @@ const BivariateChoroplethMap = ({
   onHoverEnd,
   caption,
   fillContainer = false,
+  focusCode,
+  focusMaxZoom,
   children,
 }: BivariateChoroplethMapProps) => {
   const styleForProperties = (properties: LsoaProperties): PathOptions => {
@@ -74,6 +108,11 @@ const BivariateChoroplethMap = ({
           <TileLayer
             attribution='&copy; OpenStreetMap contributors &copy; CARTO'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
+          <BivariateViewportController
+            data={data}
+            focusCode={focusCode}
+            focusMaxZoom={focusMaxZoom}
           />
           <GeoJSON
             key={`bivariate-${selectedCode ?? 'none'}-${highlightedCodes?.size ?? 0}`}

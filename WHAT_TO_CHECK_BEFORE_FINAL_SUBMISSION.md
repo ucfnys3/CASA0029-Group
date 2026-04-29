@@ -3,7 +3,7 @@
 ## Unresolved Schema Assumptions
 
 - `london_crimes_2025_flexible.json` and the Q4 2025 geocoded point files do not represent exactly the same count logic, so borough overview totals and hotspot-page totals are not identical.
-- `182` LSOAs do not currently have a complete set of structural indicators for the final comparative index, so they appear as no-data in some synthesis views.
+- The LSOA synthesis views now use the 2021 London LSOA boundary extract and currently have a complete set of structural indicators for 4,988 LSOAs.
 - The priority index uses equal weights and robust min-max scaling. Confirm that the team is happy with this transparent prototype method.
 
 ## Content Assumptions
@@ -35,6 +35,7 @@
 ## Data Checks
 
 - Raw source data is expected inside the project at `data/`.
+- Keep `data/London_LSOA_2021_Boundaries.geojson` as the London-scale 2021 LSOA boundary input. The England/Wales-wide source file can be removed after this extract is generated.
 - Spot-check a few borough monthly values against `Final_Borough_Map.geojson`.
 - Spot-check a few LSOA indicator values against the raw Census CSVs.
 - Spot-check `Police_Force_Strength.csv` and `public-perception-data.csv` against the Introduction page charts.

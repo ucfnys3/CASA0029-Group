@@ -2638,11 +2638,28 @@ select {
 /* Header: 3-column grid — title | mode toggle | stat strip */
 .cmd__header {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) auto minmax(300px, auto);
-  gap: 1rem;
-  align-items: end;
-  padding-bottom: 0.5rem;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 0.6rem 1.2rem;
+  align-items: center;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cmd__title-block {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.cmd__mode-toggle {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+}
+
+.cmd__stat-strip {
+  grid-column: 1 / -1;
+  grid-row: 2;
 }
 
 .cmd__title-block {
@@ -2663,9 +2680,9 @@ select {
 .crime-map-dashboard h1 {
   margin: 0;
   font-family: 'Newsreader', Georgia, serif;
-  font-size: clamp(2rem, 3.5vw, 3.2rem);
-  line-height: 0.96;
-  letter-spacing: -0.04em;
+  font-size: clamp(1.5rem, 2.4vw, 2.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
   color: #fff8ed;
 }
 
@@ -2677,7 +2694,7 @@ select {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  align-self: end;
+  white-space: nowrap;
 }
 
 .cmd__mode-btn {
@@ -3916,6 +3933,7 @@ select {
 
 .cmd__hover-popup,
 .cmd__legend-panel,
+.cmd__search-panel,
 .cmd__top-chart-panel {
   position: absolute;
   z-index: 650;
@@ -4029,6 +4047,19 @@ select {
   width: 11px;
   height: 11px;
   border-radius: 3px;
+}
+
+.cmd__search-panel {
+  right: 0.9rem;
+  top: 0.9rem;
+  width: 334px;
+  padding: 0.68rem 0.72rem;
+}
+
+.cmd__search-panel .geo-search {
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .cmd__top-chart-panel {
@@ -4216,6 +4247,7 @@ select {
   }
 
   .cmd__legend-panel,
+  .cmd__search-panel,
   .cmd__top-chart-panel {
     display: none;
   }
@@ -4249,6 +4281,95 @@ select {
   color: var(--muted);
   font-size: 0.95rem;
 }
+
+/* ── Page-6 intro header layout ── */
+.fmap-page--with-intro {
+  display: flex;
+  flex-direction: column;
+}
+
+.cf-page-intro {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  padding: 0.75rem 1.4rem;
+  background: rgba(10, 12, 18, 0.97);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  z-index: 10;
+}
+
+.cf-page-intro__lead {
+  flex: 0 0 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.cf-page-intro__title {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.12rem;
+  color: var(--text);
+  line-height: 1.25;
+  margin: 0.1rem 0 0;
+}
+
+.cf-page-intro__desc {
+  font-size: 0.76rem;
+  color: rgba(255, 238, 206, 0.62);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.cf-page-intro__guide {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem 2rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  padding-left: 1.5rem;
+  align-content: start;
+}
+
+.cf-page-intro__item {
+  font-size: 0.74rem;
+  color: rgba(255, 238, 206, 0.62);
+  line-height: 1.5;
+}
+
+.cf-page-intro__item strong {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(243, 197, 106, 0.8);
+  margin-bottom: 0.12rem;
+}
+
+.fmap-map-area {
+  flex: 1 1 0;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Left panel is content-height only inside the map area */
+.fmap-map-area .fmap-panel--left {
+  bottom: auto;
+}
+
+/* Legends inside the left panel become inline flow elements */
+.fmap-panel .cf-legend {
+  position: static;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  min-width: auto;
+  padding: 0.45rem 0.6rem 0.5rem;
+  border-radius: 8px;
+}
+
 
 .fmap-canvas {
   position: absolute;
@@ -4312,6 +4433,10 @@ select {
   width: 360px;
 }
 
+.fmap-panel--scatter {
+  gap: 0.55rem;
+}
+
 .fmap-panel__kicker {
   font-size: 0.68rem;
   font-weight: 800;
@@ -4354,6 +4479,150 @@ select {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.geo-search {
+  display: grid;
+  gap: 0.38rem;
+  padding: 0.64rem 0.68rem;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.geo-search__label {
+  color: rgba(243, 197, 106, 0.82);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.geo-search__input-wrap {
+  position: relative;
+}
+
+.geo-search input[type='search'] {
+  width: 100%;
+  min-height: 2rem;
+  padding: 0.42rem 1.9rem 0.42rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(10, 12, 18, 0.72);
+  color: #fff8ed;
+  font: inherit;
+  font-size: 0.76rem;
+  outline: none;
+}
+
+.geo-search input[type='search']::placeholder {
+  color: rgba(255, 238, 206, 0.38);
+}
+
+.geo-search input[type='search']:focus {
+  border-color: rgba(230, 162, 58, 0.56);
+  box-shadow: 0 0 0 2px rgba(230, 162, 58, 0.12);
+}
+
+.geo-search__clear {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.geo-search__clear:hover {
+  background: rgba(230, 162, 58, 0.18);
+  color: #ffe6aa;
+}
+
+.geo-search__helper,
+.geo-search__empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.42;
+}
+
+.geo-search__results {
+  display: grid;
+  gap: 0.26rem;
+  max-height: 14rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(230, 162, 58, 0.35) transparent;
+}
+
+.geo-search__results button {
+  width: 100%;
+  display: grid;
+  gap: 0.14rem;
+  padding: 0.44rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.geo-search__results button:hover {
+  border-color: rgba(230, 162, 58, 0.35);
+  background: rgba(230, 162, 58, 0.1);
+}
+
+.geo-search__result-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.55rem;
+}
+
+.geo-search__result-main strong {
+  overflow: hidden;
+  color: #fff8ed;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.geo-search__result-main em {
+  flex: 0 0 auto;
+  color: rgba(243, 197, 106, 0.82);
+  font-size: 0.58rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.geo-search__results small,
+.geo-search__result-meta {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .fmap-var-list {
@@ -4412,6 +4681,34 @@ select {
   font-size: 0.78rem;
   color: rgba(255, 238, 206, 0.82);
   line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.fmap-takeaway__stat {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.bv-legend-guide {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.bv-legend-guide li strong {
+  color: var(--text);
+  font-weight: 700;
 }
 
 .fmap-method-card {
@@ -4662,6 +4959,63 @@ select {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.fmap-profile-crime-card {
+  display: grid;
+  gap: 0.42rem;
+  padding: 0.66rem 0.74rem;
+  border: 1px solid rgba(239, 143, 97, 0.22);
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(202, 85, 53, 0.12), rgba(255, 255, 255, 0.025)),
+    rgba(255, 255, 255, 0.03);
+}
+
+.fmap-profile-crime-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.fmap-profile-crime-card__header span {
+  color: rgba(243, 197, 106, 0.82);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.fmap-profile-crime-card__header strong {
+  color: #fff8ed;
+  font-size: 0.86rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fmap-profile-crime-card__track {
+  position: relative;
+  overflow: hidden;
+  height: 0.38rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.fmap-profile-crime-card__track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f8c7a8, #ef8f61, #ca5535);
+  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fmap-profile-crime-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.42;
 }
 
 .fmap-profile-actions {
@@ -5011,10 +5365,45 @@ select {
 
 /* Scatter plot */
 
+.bivariate-scatter-block {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bivariate-scatter-block__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.bivariate-scatter-block__count {
+  flex: 0 0 auto;
+  margin-top: 0.05rem;
+  padding: 0.22rem 0.45rem;
+  border: 1px solid rgba(243, 197, 106, 0.28);
+  border-radius: 999px;
+  background: rgba(230, 162, 58, 0.1);
+  color: #ffe6aa;
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.bivariate-scatter-block__caption {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
 .bivariate-scatter {
   display: block;
   width: 100%;
-  margin: 0.4rem 0 0.2rem;
+  margin: 0;
 }
 
 .bivariate-scatter__frame {
@@ -5495,6 +5884,47 @@ select {
   color: #ef8f61 !important;
 }
 
+/* ── Crime-type breakdown (Page 7) ── */
+.cf-type-split {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem 0.5rem;
+  margin: 0.5rem 0 0.1rem;
+}
+.cf-type-split__row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.18rem 0;
+}
+.cf-type-split__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cf-type-split__label {
+  flex: 1;
+  font-size: 0.75rem;
+  color: rgba(255, 238, 206, 0.7);
+}
+.cf-type-split__row strong {
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+.cf-type-split__hint {
+  margin: 0.35rem 0 0.15rem;
+  font-size: 0.65rem;
+  color: rgba(255, 238, 206, 0.4);
+}
+.cf-type-split__link {
+  margin: 0;
+  font-size: 0.65rem;
+  color: rgba(255, 238, 206, 0.35);
+  font-style: italic;
+}
+
 .cf-legend {
   position: absolute;
   bottom: 1rem;
@@ -5590,3 +6020,528 @@ select {
   height: 3px !important;
   flex: 0 0 32px !important;
 }
+
+/* ── Page 6 · Crime Type Divergence ─────────────────────────────────────── */
+
+/* Mode toggle */
+.ctd-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ctd-toggle__btn {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 238, 206, 0.55);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+}
+
+.ctd-toggle__btn--active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ctd-toggle__btn:hover:not(.ctd-toggle__btn--active) {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: var(--text);
+}
+
+/* Inline gradient legend */
+.ctd-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.ctd-legend__bar {
+  flex: 1;
+  height: 10px;
+  border-radius: 4px;
+}
+
+.ctd-legend__label {
+  font-size: 0.68rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* Stats row inside takeaway */
+.ctd-stats-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.2rem;
+}
+
+.ctd-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ctd-stat__val {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.ctd-stat__label {
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Diverging chart */
+.corr-diverg-chart {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.corr-diverg-chart__head {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.corr-diverg-chart__head--violent {
+  fill: #b565b0;
+}
+
+.corr-diverg-chart__head--property {
+  fill: #3ea8d8;
+}
+
+.corr-diverg-chart__grid {
+  stroke: rgba(255, 246, 232, 0.08);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.corr-diverg-chart__center {
+  stroke: rgba(255, 246, 232, 0.22);
+  stroke-width: 1;
+}
+
+.corr-diverg-chart__row-bg {
+  fill: transparent;
+}
+
+.corr-diverg-chart__row-bg:hover {
+  fill: rgba(255, 255, 255, 0.03);
+}
+
+.corr-diverg-chart__label {
+  font-size: 0.67rem;
+  fill: rgba(255, 238, 206, 0.78);
+  font-family: 'Manrope', sans-serif;
+}
+
+.corr-diverg-chart__tick {
+  font-size: 0.6rem;
+  fill: rgba(255, 238, 206, 0.35);
+  font-family: 'Manrope', sans-serif;
+}
+
+.corr-diverg-chart__val {
+  font-size: 0.62rem;
+  fill: rgba(255, 238, 206, 0.5);
+  font-family: 'Manrope', sans-serif;
+}
+
+/* ── Crime Type Legend (2x2 matrix) ─────────────────────────────────────── */
+.ct-legend {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.ct-legend__y-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 0.63rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  padding-bottom: 1.2rem;
+  align-self: center;
+}
+
+.ct-legend__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  flex: 1;
+}
+
+.ct-legend__cell {
+  aspect-ratio: 1.6;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.3rem;
+  transition: opacity 0.15s, transform 0.12s;
+}
+
+.ct-legend__cell:hover {
+  transform: scale(1.04);
+}
+
+.ct-legend__cell--active {
+  outline: 2px solid rgba(255, 246, 232, 0.7);
+  outline-offset: 1px;
+}
+
+.ct-legend__cell-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  line-height: 1.3;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+
+.ct-legend__x-label {
+  font-size: 0.63rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-align: center;
+  margin-top: 0.25rem;
+}
+
+/* ── Bin count list ─────────────────────────────────────────────────────── */
+.ct-bin-counts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.ct-bin-count {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+}
+
+.ct-bin-count__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.ct-bin-count__label {
+  flex: 1;
+  color: rgba(255, 238, 206, 0.78);
+}
+
+.ct-bin-count__n {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ct-bin-count__n em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 0.2rem;
+}
+
+/* ── Crime type scatter quadrant labels ─────────────────────────────────── */
+.ct-scatter__qlabel {
+  font-size: 0.62rem;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+/* ── Analysis Summary Page (dark-theme redesign) ─────────────────────────── */
+.summ-page {
+  padding-block: 2.5rem 3.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Main card */
+.summ-card {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.44fr) minmax(380px, 0.56fr);
+  gap: 2rem;
+  padding: 2rem;
+  background: rgba(12, 16, 26, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(12px) saturate(130%);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Left column ── */
+.summ-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+/* 3×2 thumbnail grid */
+.summ-thumb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.summ-thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at 46% 46%, rgba(203, 84, 58, 0.7) 0 10%, transparent 22%),
+    linear-gradient(145deg, #1a2030, #0e1520);
+}
+
+.summ-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+}
+
+.summ-thumb__label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.2rem 0.3rem;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: rgba(255, 238, 206, 0.9);
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+/* Tone-specific placeholder gradients */
+.summ-thumb--crime {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(202, 85, 53, 0.72) 0 12%, transparent 26%),
+    radial-gradient(circle at 65% 60%, rgba(239, 143, 97, 0.45) 0 9%, transparent 20%),
+    linear-gradient(145deg, #2a1510, #0e0a08);
+}
+.summ-thumb--pressure {
+  background:
+    radial-gradient(circle at 52% 55%, rgba(105, 42, 88, 0.72) 0 14%, transparent 28%),
+    radial-gradient(circle at 40% 35%, rgba(185, 111, 146, 0.5) 0 9%, transparent 20%),
+    linear-gradient(145deg, #1e1028, #0c0810);
+}
+.summ-thumb--matrix {
+  background:
+    linear-gradient(90deg, rgba(100, 172, 190, 0.55) 0 33%, rgba(173, 158, 165, 0.6) 33% 66%, rgba(151, 83, 86, 0.65) 66%),
+    linear-gradient(0deg, rgba(87, 66, 73, 0.5), rgba(30, 36, 48, 0.9));
+}
+.summ-thumb--crime-type {
+  background:
+    radial-gradient(circle at 35% 55%, rgba(123, 45, 139, 0.65) 0 10%, transparent 22%),
+    radial-gradient(circle at 65% 45%, rgba(17, 104, 160, 0.65) 0 10%, transparent 22%),
+    linear-gradient(145deg, #180e28, #081018);
+}
+.summ-thumb--scenario {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(61, 130, 83, 0.65) 0 14%, transparent 28%),
+    radial-gradient(circle at 65% 60%, rgba(127, 174, 95, 0.45) 0 9%, transparent 20%),
+    linear-gradient(145deg, #0e1e10, #081008);
+}
+.summ-thumb--intro {
+  background:
+    radial-gradient(circle at 48% 50%, rgba(255, 200, 80, 0.25) 0 18%, transparent 36%),
+    linear-gradient(145deg, #1a1810, #0c0c08);
+}
+
+/* 2 large detail figures */
+.summ-large-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+}
+
+.summ-large {
+  position: relative;
+  overflow: hidden;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  aspect-ratio: 16 / 9;
+}
+
+.summ-large--matrix {
+  background:
+    linear-gradient(135deg, rgba(100, 172, 190, 0.35) 0 33%, rgba(87, 66, 73, 0.7) 66%),
+    linear-gradient(145deg, #1a2230, #0e1220);
+}
+.summ-large--scenario {
+  background:
+    linear-gradient(90deg,
+      rgba(202, 85, 53, 0.45) 0 50%,
+      rgba(61, 130, 83, 0.45) 50%),
+    linear-gradient(145deg, #1a1810, #0c1008);
+}
+
+.summ-large img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+}
+
+.summ-large__caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.3rem 0.5rem;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.summ-large__caption strong {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: rgba(255, 238, 206, 0.95);
+  letter-spacing: 0.04em;
+}
+
+.summ-large__caption span {
+  font-size: 0.55rem;
+  color: rgba(255, 238, 206, 0.5);
+  line-height: 1.3;
+}
+
+/* ── Right column ── */
+.summ-right {
+  padding: 0.25rem 0.1rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.summ-eyebrow {
+  margin: 0 0 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent, #ffe2a3);
+  opacity: 0.7;
+}
+
+.summ-title {
+  margin: 0 0 1.4rem;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1.05;
+  color: rgba(255, 238, 206, 0.95);
+  letter-spacing: -0.01em;
+}
+
+.summ-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  flex: 1;
+}
+
+.summ-finding {
+  display: flex;
+  gap: 0.85rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.summ-finding:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.summ-finding__num {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--accent, #ffe2a3);
+  opacity: 0.55;
+  flex-shrink: 0;
+  margin-top: 0.18rem;
+  width: 1.6rem;
+}
+
+.summ-finding__body h2 {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: rgba(255, 238, 206, 0.92);
+  letter-spacing: 0;
+}
+
+.summ-finding__body p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: rgba(255, 238, 206, 0.55);
+}
+
+/* ── Conclusion banner ── */
+.summ-conclusion {
+  padding: 1.1rem 1.8rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(28, 38, 58, 0.95), rgba(18, 24, 40, 0.95));
+  border: 1px solid rgba(255, 226, 163, 0.15);
+  color: rgba(255, 238, 206, 0.88);
+  font-size: clamp(0.88rem, 1.2vw, 1.05rem);
+  line-height: 1.55;
+  text-align: center;
+  font-style: italic;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1050px) {
+  .summ-card {
+    grid-template-columns: 1fr;
+  }
+  .summ-right {
+    order: -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .summ-page {
+    padding-block: 1rem 2rem;
+  }
+  .summ-card {
+    padding: 1.2rem;
+    gap: 1.2rem;
+  }
+  .summ-thumb-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+

@@ -67,13 +67,14 @@ The project is now self-contained: the raw source files live inside this project
 
 Core inputs include:
 
-- `LSOA_Merged_map_with_data.geojson`
+- `London_LSOA_2021_Boundaries.geojson`
+- `LSOA_Crime_Rate_2021_With_Names.csv`
 - `Final_Borough_Map.geojson`
 - `london_crimes_2025_flexible.json`
 - `Police_Force_Strength.csv`
 - `public-perception-data.csv`
 - Q4 2025 monthly crime point GeoJSON files
-- Census-derived LSOA CSV files for unemployment, tenure, deprivation, health, overcrowding, age, population density, and total residents
+- Census-derived LSOA CSV files for unemployment, tenure, deprivation, qualifications, recent migration, age, population density, and total residents
 
 ## Generated Runtime Assets
 
@@ -158,7 +159,7 @@ If the repository uses a subpath, set `VITE_BASE_PATH` before building.
 
 ## Notes On Interpretation
 
-- The structural analysis pages use 2021 neighbourhood indicators.
+- The structural analysis pages use 2021 LSOA boundaries and 2021 neighbourhood indicators.
 - The hotspot page uses Q4 2025 geocoded incident records.
 - Those two evidence layers should not be treated as interchangeable.
 - The Crime Vulnerability Index is a comparative summary indicator, not a causal model.

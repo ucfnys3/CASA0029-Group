@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import BivariateChoroplethMap from '../components/BivariateChoroplethMap';
 import BivariateLegend from '../components/BivariateLegend';
 import BivariateScatter, { pointsFromFeatures } from '../components/BivariateScatter';
+import GeoSearch, { type GeoSearchItem } from '../components/GeoSearch';
 import { useJsonData } from '../hooks/useJsonData';
 import { formatRate } from '../lib/format';
 import type { LsoaGeoJson, LsoaProperties } from '../types/data';
@@ -9,12 +10,13 @@ import type { LsoaGeoJson, LsoaProperties } from '../types/data';
 const binLabelShort = (crime: number | null, vuln: number | null): string => {
   if (crime == null || vuln == null) return 'No data';
   const levels = ['low', 'mid', 'high'];
-  return `${levels[crime]}-crime · ${levels[vuln]}-pressure`;
+  return `${levels[crime]} crime / ${levels[vuln]} pressure`;
 };
 
 const OverlapPage = () => {
   const { data, loading, error } = useJsonData<LsoaGeoJson>('/data/lsoa.geojson');
   const [selectedLsoa, setSelectedLsoa] = useState<LsoaProperties | null>(null);
+  const [focusedLsoaCode, setFocusedLsoaCode] = useState<string | null>(null);
   const [activeBin, setActiveBin] = useState<number | null>(null);
 
   const allProperties = useMemo<LsoaProperties[]>(() => {
@@ -23,6 +25,25 @@ const OverlapPage = () => {
   }, [data]);
 
   const scatterPoints = useMemo(() => pointsFromFeatures(allProperties), [allProperties]);
+
+  const lsoaSearchItems = useMemo<Array<GeoSearchItem<LsoaProperties>>>(() => {
+    return allProperties
+      .slice()
+      .sort((left, right) => left.name.localeCompare(right.name))
+      .map((lsoa) => ({
+        id: lsoa.code,
+        primary: lsoa.name,
+        secondary: lsoa.borough,
+        tag: 'LSOA',
+        meta: `${formatRate(lsoa.crimeRate)} | ${
+          typeof lsoa.compositeVulnerabilityScore === 'number'
+            ? `${lsoa.compositeVulnerabilityScore.toFixed(1)} pressure`
+            : 'No pressure score'
+        }`,
+        searchText: `${lsoa.code} ${lsoa.name} ${lsoa.borough}`,
+        payload: lsoa,
+      }));
+  }, [allProperties]);
 
   const binCounts = useMemo(() => {
     const counts = new Array<number>(9).fill(0);
@@ -79,20 +100,23 @@ const OverlapPage = () => {
   }, [allProperties, activeBin]);
 
   if (loading) {
-    return <div className="fmap-page fmap-page--loading">Loading bivariate map…</div>;
+    return <div className="fmap-page fmap-page--loading">Loading crime and pressure matrix...</div>;
   }
 
   if (!data || error) {
     return (
       <div className="fmap-page fmap-page--loading">
-        Could not load the crime × pressure map. {error}
+        Could not load the crime x pressure map. {error}
       </div>
     );
   }
 
   const handleScatterSelect = (code: string) => {
     const match = allProperties.find((p) => p.code === code);
-    if (match) setSelectedLsoa(match);
+    if (match) {
+      setSelectedLsoa(match);
+      setFocusedLsoaCode(match.code);
+    }
   };
 
   return (
@@ -102,53 +126,85 @@ const OverlapPage = () => {
           data={data}
           selectedCode={selectedLsoa?.code}
           highlightedCodes={highlightedCodes}
-          onSelect={setSelectedLsoa}
+          onSelect={(lsoa) => {
+            setSelectedLsoa(lsoa);
+            setFocusedLsoaCode(null);
+          }}
+          focusCode={focusedLsoaCode}
+          focusMaxZoom={14.5}
           fillContainer
         />
       </div>
 
       <aside className="fmap-panel fmap-panel--left">
-        <p className="fmap-panel__kicker">Page 5 · Crime × Pressure</p>
-        <h2 className="fmap-panel__title">Where do the two surfaces coincide?</h2>
+        <p className="fmap-panel__kicker">Structural Analysis Section</p>
+        <h2 className="fmap-panel__title">Where does the structural theory hold?</h2>
         <p className="fmap-panel__desc">
-          Page 4 mapped structural pressure. Page 3 mapped crime. A bivariate classification
-          splits both into tertiles — low, mid, high — and cross-tabs them. Each LSOA lands in
-          one of nine bins, coloured by how the two signals combine.
+          The structural pressure section created a crime-free baseline. This section brings
+          recorded crime back in and asks whether the two surfaces actually align. Crime rate
+          and composite pressure are split into tertiles, then cross-tabulated so every London
+          LSOA falls into one of nine analytical cells.
         </p>
 
         <BivariateLegend activeBin={activeBin} onCellClick={setActiveBin} />
 
         <p className="fmap-var-desc" style={{ marginTop: '0.75rem' }}>
-          Click a legend cell to highlight neighbourhoods in that bin. Deep focal colour (top-right)
-          = <strong>high crime AND high pressure</strong>. Warm edge (bottom-right) = pressure without
-          crime. Cool edge (top-left) = crime without pressure.
+          Click any cell to highlight matching LSOAs on both views.
         </p>
+        <ul className="bv-legend-guide">
+          <li><strong>Top-right</strong> - alignment: high crime and high structural pressure co-occur</li>
+          <li><strong>Top-left</strong> - mismatch: high crime despite low structural pressure</li>
+          <li><strong>Bottom-right</strong> - resilience: heavy pressure, yet crime remains low</li>
+        </ul>
 
         <div className="fmap-takeaway">
-          {focalCount.toLocaleString()} of {totalClassified.toLocaleString()} LSOAs
-          ({focalShare.toFixed(0)}%) fall in the double-high bin. Social disorganisation theory
-          predicts coincidence — the map lets you see where the prediction holds and where it
-          breaks.
+          <span className="fmap-takeaway__stat">{focalShare.toFixed(0)}%</span>
+          <span>
+            of London LSOAs sit in the double-high bin, where both signals converge and the
+            case for closer place-based interpretation is strongest.
+          </span>
         </div>
       </aside>
 
-      <aside className="fmap-panel fmap-panel--right fmap-panel--wide">
-        <p className="fmap-panel__kicker">Statistical view</p>
-        <h3 className="fmap-panel__title" style={{ fontSize: '1rem' }}>
-          Crime score vs pressure score
-        </h3>
-        <p className="fmap-panel__desc" style={{ fontSize: '0.78rem' }}>
-          Each dot is one LSOA ({scatterPoints.length.toLocaleString()} complete). Dashed lines
-          mark the tertile cuts used on the map — the dense cloud along the diagonal is the
-          signal the map encodes.
-        </p>
+      <aside className="fmap-panel fmap-panel--right fmap-panel--wide fmap-panel--scatter">
+        <section className="bivariate-scatter-block" aria-label="Crime score vs pressure score">
+          <div className="bivariate-scatter-block__head">
+            <div>
+              <p className="fmap-panel__kicker">Statistical view</p>
+              <h3 className="fmap-panel__title" style={{ fontSize: '1rem' }}>
+                Crime score vs pressure score
+              </h3>
+            </div>
+            <span className="bivariate-scatter-block__count">
+              {scatterPoints.length.toLocaleString()} LSOAs
+            </span>
+          </div>
 
-        <BivariateScatter
-          points={scatterPoints}
-          selectedCode={selectedLsoa?.code}
-          highlightedCodes={highlightedCodes}
-          activeBin={activeBin}
-          onSelect={handleScatterSelect}
+          <BivariateScatter
+            points={scatterPoints}
+            selectedCode={selectedLsoa?.code}
+            highlightedCodes={highlightedCodes}
+            activeBin={activeBin}
+            onSelect={handleScatterSelect}
+            height={252}
+            xLabel="Pressure score"
+            yLabel="Crime score"
+          />
+
+        </section>
+
+        <div className="fmap-divider" />
+
+        <GeoSearch
+          label="Find area"
+          placeholder="LSOA code, name, or borough"
+          helperText="Search by borough to list its LSOAs."
+          items={lsoaSearchItems}
+          maxResults={6}
+          onSelect={(lsoa) => {
+            setSelectedLsoa(lsoa);
+            setFocusedLsoaCode(lsoa.code);
+          }}
         />
 
         <div className="fmap-divider" />
@@ -182,14 +238,14 @@ const OverlapPage = () => {
                 <strong>
                   {typeof selectedLsoa.compositeVulnerabilityScore === 'number'
                     ? `${selectedLsoa.compositeVulnerabilityScore.toFixed(1)} / 100`
-                    : '—'}
+                    : 'No data'}
                 </strong>
               </div>
             </div>
           </>
         ) : (
           <p className="fmap-panel__desc" style={{ fontSize: '0.78rem' }}>
-            Click any LSOA on the map — or any dot on the scatter — to inspect where it sits on
+            Click any LSOA on the map, or any dot on the scatter, to inspect where it sits on
             both axes.
           </p>
         )}
@@ -197,6 +253,12 @@ const OverlapPage = () => {
         <div className="fmap-divider" />
 
         <p className="fmap-panel__kicker">Where the theory bends</p>
+        <p className="fmap-panel__desc" style={{ fontSize: '0.72rem' }}>
+          The off-diagonal cells are not noise; they show where the theory needs a more precise
+          mechanism. High-crime, low-pressure places may reflect target-rich activity centres,
+          mobility, nightlife, retail, or other exposure patterns. High-pressure, low-crime
+          places point toward local protection, social infrastructure, or under-measured context.
+        </p>
 
         <div className="fmap-section-label" style={{ marginTop: '0.25rem' }}>
           High crime despite low pressure
@@ -265,9 +327,9 @@ const OverlapPage = () => {
         </ol>
 
         <div className="fmap-takeaway">
-          The off-diagonal cases matter: West End streets carry tourist-driven crime without
-          structural pressure, while outer-London estates carry pressure without matching crime.
-          Page 6 ranks where intervention should land when both converge.
+          The matrix is a diagnostic device, not a final answer. It shows where the structural
+          narrative is supported, where it bends, and where later pages need to separate crime
+          mechanisms or test model sensitivity more carefully.
         </div>
       </aside>
     </div>

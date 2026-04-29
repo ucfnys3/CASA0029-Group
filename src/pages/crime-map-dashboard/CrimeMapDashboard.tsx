@@ -4,6 +4,7 @@ import type { LeafletMouseEvent } from 'leaflet';
 import ChoroplethMap from '../../components/ChoroplethMap';
 import CrimeDeckMap from '../../components/CrimeDeckMap';
 import type { CrimeDeckIncident } from '../../components/CrimeDeckMap';
+import GeoSearch, { type GeoSearchItem } from '../../components/GeoSearch';
 import MapLegend from '../../components/MapLegend';
 import { useJsonData } from '../../hooks/useJsonData';
 import { PALETTES } from '../../lib/colors';
@@ -48,6 +49,7 @@ const CrimeMapDashboard = () => {
   const [metricMode, setMetricMode] = useState<MetricMode>('rate');
   const [selectedTime, setSelectedTime] = useState<TimeSlice>('year');
   const [selectedBorough, setSelectedBorough] = useState<BoroughProperties | null>(null);
+  const [focusedBoroughCode, setFocusedBoroughCode] = useState<string | null>(null);
   const [hoverDetail, setHoverDetail] = useState<{
     borough: BoroughProperties;
     x: number;
@@ -121,6 +123,7 @@ const CrimeMapDashboard = () => {
       : metricMode === 'rate'
         ? (`rate_${selectedTime}` as keyof BoroughProperties)
         : (`count_${selectedTime}` as keyof BoroughProperties);
+  const metricFormatter = metricMode === 'rate' ? formatRate : formatInteger;
 
   const countKey: keyof BoroughProperties =
     selectedTime === 'year' ? annualCountKey : (`count_${selectedTime}` as keyof BoroughProperties);
@@ -131,6 +134,11 @@ const CrimeMapDashboard = () => {
       ? annualOutcomesKey
       : (`outcomes_${selectedTime}` as keyof BoroughProperties);
 
+  const timeLabel =
+    selectedTime === 'year'
+      ? '2025'
+      : (availableMonths.find((item) => item.key === selectedTime)?.label ?? selectedTime);
+
   const sortedBoroughs = useMemo(() => {
     if (!mappedBoroughs) return [];
     return mappedBoroughs.features
@@ -138,6 +146,22 @@ const CrimeMapDashboard = () => {
       .filter((properties) => typeof properties[valueKey] === 'number')
       .sort((left, right) => Number(right[valueKey]) - Number(left[valueKey]));
   }, [mappedBoroughs, valueKey]);
+
+  const boroughSearchItems = useMemo<Array<GeoSearchItem<BoroughProperties>>>(() => {
+    if (!mappedBoroughs) return [];
+    return mappedBoroughs.features
+      .map((feature) => feature.properties)
+      .sort((left, right) => left.name.localeCompare(right.name))
+      .map((borough) => ({
+        id: borough.code,
+        primary: borough.name,
+        secondary: 'London borough',
+        tag: 'Borough',
+        meta: `${timeLabel}: ${metricFormatter(valueFor(borough, valueKey))}`,
+        searchText: `${borough.code} ${borough.name}`,
+        payload: borough,
+      }));
+  }, [mappedBoroughs, metricFormatter, timeLabel, valueKey]);
 
   const annualCountLeader = useMemo(() => {
     if (!mappedBoroughs) return null;
@@ -156,11 +180,6 @@ const CrimeMapDashboard = () => {
   }, [mappedBoroughs]);
 
   const activeBorough = selectedBorough ?? null;
-
-  const timeLabel =
-    selectedTime === 'year'
-      ? '2025'
-      : (availableMonths.find((item) => item.key === selectedTime)?.label ?? selectedTime);
 
   const monthRecord =
     selectedTime === 'year'
@@ -213,9 +232,8 @@ const CrimeMapDashboard = () => {
   const handleTimeChange = (time: TimeSlice) => {
     setSelectedTime(time);
     setSelectedBorough(null);
+    setFocusedBoroughCode(null);
   };
-
-  const metricFormatter = metricMode === 'rate' ? formatRate : formatInteger;
 
   const numericValues = useMemo(() => {
     if (!mappedBoroughs) return [];
@@ -256,10 +274,10 @@ const CrimeMapDashboard = () => {
 
   const annualStatCards = [
     {
-      label: 'Offence',
+      label: 'Recorded offences',
       value: formatCompact(annualTotals.offences),
       sub: '2025',
-      detail: 'All monthly borough offence records in 2025.',
+      detail: 'Observed borough-level offences in the current 2025 extract.',
     },
     {
       label: 'Highest rate',
@@ -268,7 +286,7 @@ const CrimeMapDashboard = () => {
       detail: (
         <>
           <strong>{annualRateLeader?.name ?? 'The leading borough'}</strong>
-          <span>Small resident base plus heavy commuter and visitor footfall.</span>
+          <span>shows the strongest resident-normalised crime intensity in the observed series.</span>
         </>
       ),
     },
@@ -279,7 +297,7 @@ const CrimeMapDashboard = () => {
       detail: (
         <>
           <strong>{annualCountLeader?.name ?? 'The leading borough'}</strong>
-          <span>records the largest offence volume across 2025.</span>
+          <span>records the largest offence volume before adjusting for population size.</span>
         </>
       ),
     },
@@ -287,7 +305,7 @@ const CrimeMapDashboard = () => {
       label: 'Positive outcomes',
       value: formatCompact(annualTotals.positiveOutcomes),
       sub: '2025',
-      detail: 'Records with a positive outcome in the annual borough series.',
+      detail: 'Outcome records provide context for enforcement response, not a measure of underlying risk.',
     },
   ];
 
@@ -305,8 +323,8 @@ const CrimeMapDashboard = () => {
     <div className="crime-map-dashboard shell-width">
       <header className="cmd__header">
         <div className="cmd__title-block">
-          <p className="cmd__kicker">London Crime Dashboard</p>
-          <h1>Crime Map</h1>
+          <p className="cmd__kicker">Crime Context Section</p>
+          <h1>Crime map: where offences concentrate</h1>
         </div>
 
         <div className="cmd__mode-toggle">
@@ -369,6 +387,8 @@ const CrimeMapDashboard = () => {
               valueFormatter={metricFormatter}
               fillContainer
               showLegend={false}
+              focusCode={focusedBoroughCode}
+              focusMaxZoom={11.4}
             >
               {hoverDetail ? (
                 <article
@@ -491,6 +511,21 @@ const CrimeMapDashboard = () => {
 
         {mode === 'borough' && (
           <>
+            <aside className="cmd__search-panel">
+              <GeoSearch
+                label="Find borough"
+                placeholder="Search borough"
+                helperText="Select a borough to highlight and zoom the map."
+                items={boroughSearchItems}
+                maxResults={5}
+                onSelect={(borough) => {
+                  setSelectedBorough(borough);
+                  setFocusedBoroughCode(borough.code);
+                  setHoverDetail(null);
+                }}
+              />
+            </aside>
+
             <aside className="cmd__float-panel cmd__float-panel--left">
               <p className="cmd__float-panel__label">Controls</p>
 

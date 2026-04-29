@@ -21,8 +21,8 @@ export interface LsoaProperties {
   unemployment: number | null;
   privateRenting: number | null;
   deprivation: number | null;
-  badHealth: number | null;
-  overcrowding: number | null;
+  noQualifications: number | null;
+  recentMigration: number | null;
   youthShare: number | null;
   populationDensity: number | null;
   newMigrantShare: number | null;
@@ -31,8 +31,8 @@ export interface LsoaProperties {
   unemploymentScore: number | null;
   privateRentingScore: number | null;
   deprivationScore: number | null;
-  badHealthScore: number | null;
-  overcrowdingScore: number | null;
+  noQualificationsScore: number | null;
+  recentMigrationScore: number | null;
   youthShareScore: number | null;
   populationDensityScore: number | null;
   priorityIndex: number | null;
@@ -48,6 +48,12 @@ export interface LsoaProperties {
   crimeRentingOverlap: number | null;
   crimeUnemploymentOverlap: number | null;
   predictedCrimeRate: number | null;
+  violentRate: number | null;
+  violentRateScore: number | null;
+  propertyRate: number | null;
+  propertyRateScore: number | null;
+  deprivationSubIndex: number | null;
+  mobilitySubIndex: number | null;
   [key: string]: string | number | null;
 }
 
@@ -87,8 +93,8 @@ export interface RankedPlace {
   unemployment: number;
   privateRenting: number;
   deprivation: number;
-  badHealth: number;
-  overcrowding: number;
+  noQualifications: number;
+  recentMigration: number;
   youthShare: number;
 }
 

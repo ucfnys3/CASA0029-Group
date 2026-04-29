@@ -11,11 +11,20 @@ import type {
   ModelPredictor,
 } from '../types/data';
 
+type CrimeTypePredictor = { key: string; coefficient: number; mean: number };
+type CrimeTypeSubModel = {
+  target: string;
+  intercept: number;
+  predictors: CrimeTypePredictor[];
+  rSquared: number;
+  observations: number;
+};
+type CrimeTypeModels = { violent: CrimeTypeSubModel; property: CrimeTypeSubModel };
+
 type LeverKey =
-  | 'unemployment'
   | 'privateRenting'
-  | 'badHealth'
-  | 'youthShare';
+  | 'deprivation'
+  | 'recentMigration';
 
 const LEVERS: Array<{
   key: LeverKey;
@@ -24,32 +33,25 @@ const LEVERS: Array<{
   description: string;
 }> = [
   {
-    key: 'unemployment',
-    label: 'Unemployment',
-    shortLabel: 'Unemp.',
-    description:
-      '% of working-age residents unemployed. A proxy for labour-market exclusion.',
-  },
-  {
     key: 'privateRenting',
     label: 'Private renting',
     shortLabel: 'Renting',
     description:
-      '% of households in the private rented sector — a proxy for tenure instability.',
+      'Share of households in the private rented sector, used here as a proxy for tenure instability and residential churn.',
   },
   {
-    key: 'badHealth',
-    label: 'Bad health',
-    shortLabel: 'Health',
+    key: 'deprivation',
+    label: 'Deprivation',
+    shortLabel: 'Depriv.',
     description:
-      '% of residents reporting bad or very bad general health (2021 Census).',
+      'Census 2021 household deprivation measure, used as the economic hardship lever in the sensitivity test.',
   },
   {
-    key: 'youthShare',
-    label: 'Youth 16–24',
-    shortLabel: 'Youth',
+    key: 'recentMigration',
+    label: 'Recent migration',
+    shortLabel: 'Migr.',
     description:
-      '% of residents aged 16–24 — captures the life-stage associated with transition pressure.',
+      'Share of residents whose address one year earlier was elsewhere, used as a proxy for residential turnover.',
   },
 ];
 
@@ -108,8 +110,11 @@ const PriorityPlacesPage = () => {
   const { data: model } = useJsonData<CounterfactualModel>(
     '/data/model_coefficients.json',
   );
+  const { data: crimeTypeModels } = useJsonData<CrimeTypeModels>(
+    '/data/crime_type_models.json',
+  );
 
-  const [lever, setLever] = useState<LeverKey>('unemployment');
+  const [lever, setLever] = useState<LeverKey>('deprivation');
   const [reductionPct, setReductionPct] = useState<number>(20);
   const [selectedLsoa, setSelectedLsoa] = useState<LsoaProperties | null>(null);
 
@@ -122,6 +127,59 @@ const PriorityPlacesPage = () => {
   }, [model]);
 
   const activePredictor = predictorLookup ? predictorLookup[lever] : null;
+
+  // Crime-type sub-model lookup: { violent: {key to coef}, property: {key to coef} }
+  const crimeTypeLookup = useMemo<{
+    violent: Record<string, CrimeTypePredictor>;
+    property: Record<string, CrimeTypePredictor>;
+  } | null>(() => {
+    if (!crimeTypeModels) return null;
+    const toMap = (preds: CrimeTypePredictor[]) =>
+      preds.reduce<Record<string, CrimeTypePredictor>>((acc, p) => { acc[p.key] = p; return acc; }, {});
+    return {
+      violent:  toMap(crimeTypeModels.violent.predictors),
+      property: toMap(crimeTypeModels.property.predictors),
+    };
+  }, [crimeTypeModels]);
+
+  // Fixed scale computed once from ALL levers at maximum 50% reduction.
+  // Does NOT depend on `lever` or `reductionPct`, so legend stays stable.
+  const fixedReductionEdges = useMemo<{ edges: number[]; max: number }>(() => {
+    const fallback = { edges: [2, 5, 10, 20], max: 25 };
+    if (!data || !predictorLookup) return fallback;
+    const leverKeys: LeverKey[] = [
+      'privateRenting',
+      'deprivation',
+      'recentMigration',
+    ];
+    const allReductions: number[] = [];
+    leverKeys.forEach((leverKey) => {
+      const predictor = predictorLookup[leverKey];
+      if (!predictor) return;
+      const beta = predictor.coefficient;
+      data.features.forEach((feature) => {
+        const props = feature.properties;
+        if (props.predictedCrimeRate == null) return;
+        const current = props[leverKey];
+        if (typeof current !== 'number') return;
+        const delta = beta * (-current * 0.5);
+        const sim = Math.max(0, props.predictedCrimeRate + delta);
+        const reductionAmount = Math.max(0, props.predictedCrimeRate - sim);
+        if (reductionAmount > 0) allReductions.push(reductionAmount);
+      });
+    });
+    if (allReductions.length === 0) return fallback;
+    allReductions.sort((a, b) => a - b);
+    return {
+      edges: [
+        quantile(allReductions, 0.2),
+        quantile(allReductions, 0.4),
+        quantile(allReductions, 0.6),
+        quantile(allReductions, 0.8),
+      ],
+      max: allReductions[allReductions.length - 1],
+    };
+  }, [data, predictorLookup]);
 
   const scenario = useMemo<{
     simulated: Record<string, number>;
@@ -146,7 +204,7 @@ const PriorityPlacesPage = () => {
       if (props.predictedCrimeRate == null) return;
       const current = props[lever];
       if (typeof current !== 'number') return;
-      const delta = beta * (-current * scale); // negative for positive β
+        const delta = beta * (-current * scale); // negative when the coefficient is positive
       const sim = Math.max(0, props.predictedCrimeRate + delta);
       simulated[props.code] = sim;
       const reductionAmount = Math.max(0, props.predictedCrimeRate - sim);
@@ -228,7 +286,7 @@ const PriorityPlacesPage = () => {
     return {
       fillColor: colorForReduction(
         hasPrediction ? reduction : null,
-        scenario.reductionEdges,
+        fixedReductionEdges.edges,
       ),
       fillOpacity: hasPrediction ? 0.86 : 0.15,
       weight: isSelected ? 2 : 0.4,
@@ -241,11 +299,11 @@ const PriorityPlacesPage = () => {
     const observed = properties.crimeRate;
     const reduction = scenario.reduction[properties.code];
     const observedLine =
-      observed != null ? `Observed: ${formatRate(observed)}` : 'Observed: —';
+      observed != null ? `Observed: ${formatRate(observed)}` : 'Observed: no data';
     const reductionLine =
       reduction != null
-        ? `Implied drop: −${reduction.toFixed(1)} / 1k`
-        : 'Implied drop: — (insufficient data)';
+        ? `Model-implied drop: -${reduction.toFixed(1)} / 1k`
+        : 'Model-implied drop: no data';
     return (
       `<strong>${properties.name}</strong><br/>` +
       `${observedLine}<br/>` +
@@ -256,7 +314,7 @@ const PriorityPlacesPage = () => {
   if (loading) {
     return (
       <div className="fmap-page fmap-page--loading">
-        Fitting the counterfactual model…
+        Fitting the sensitivity model...
       </div>
     );
   }
@@ -264,7 +322,7 @@ const PriorityPlacesPage = () => {
   if (!data || error) {
     return (
       <div className="fmap-page fmap-page--loading">
-        Could not load the priority page. {error}
+        Could not load the scenario simulation page. {error}
       </div>
     );
   }
@@ -272,162 +330,215 @@ const PriorityPlacesPage = () => {
   const activeLever = LEVERS.find((l) => l.key === lever)!;
   const activeBetaAbs = activePredictor
     ? Math.abs(activePredictor.coefficient).toFixed(2)
-    : '—';
+    : 'No data';
 
   return (
-    <div className="fmap-page">
-      <div className="fmap-canvas">
-        <SliderCompareMap
-          data={data}
-          leftStyle={leftStyle}
-          rightStyle={rightStyle}
-          leftLabel={`Predicted rate · ${activeLever.shortLabel} −${reductionPct}%`}
-          rightLabel={`Implied drop · ${activeLever.shortLabel} −${reductionPct}%`}
-          onSelect={setSelectedLsoa}
-          tooltipFormatter={tooltipFormatter}
-          fillContainer
-        />
-      </div>
+    <div className="fmap-page fmap-page--with-intro">
 
-      <div className="cf-legend cf-legend--left">
-        <div className="cf-legend__title">Predicted crime rate</div>
-        <div className="cf-legend__swatches">
-          {CRIME_PALETTE.map((color, i) => (
-            <span
-              key={color}
-              className="cf-legend__swatch"
-              style={{ background: color }}
-              aria-label={`bin ${i}`}
-            />
-          ))}
+      {/* Top intro bar */}
+      <div className="cf-page-intro">
+        <div className="cf-page-intro__lead">
+          <p className="fmap-panel__kicker">Scenario Simulation Section</p>
+          <h2 className="cf-page-intro__title">Read the model as a sensitivity test</h2>
+          <p className="cf-page-intro__desc">
+            This page is not a forecast of a real-world intervention. It uses an OLS model
+            fitted across{' '}
+            {model?.observations.toLocaleString() ?? '4,988'} London LSOAs (R-squared ={' '}
+            {model ? model.rSquared.toFixed(2) : '0.19'}) to ask how predicted crime rates
+            move when one structural pressure is hypothetically lower everywhere. The value is
+            comparative: it shows which places and levers the fitted relationship is most
+            sensitive to.
+          </p>
         </div>
-        <div className="cf-legend__scale">
-          <span>0</span>
-          {CRIME_BIN_EDGES.map((edge) => (
-            <span key={edge}>{edge}</span>
-          ))}
-          <span>per 1k</span>
-        </div>
-      </div>
-
-      <div className="cf-legend cf-legend--right">
-        <div className="cf-legend__title">
-          Implied reduction (crimes / 1,000)
-        </div>
-        <div className="cf-legend__swatches">
-          {REDUCTION_PALETTE.map((color, i) => (
-            <span
-              key={color}
-              className="cf-legend__swatch"
-              style={{ background: color }}
-              aria-label={`reduction bin ${i}`}
-            />
-          ))}
-        </div>
-        <div className="cf-legend__scale">
-          <span>0</span>
-          {scenario.reductionEdges.map((edge, i) => (
-            <span key={i}>{edge.toFixed(1)}</span>
-          ))}
-          <span>{scenario.maxReduction.toFixed(1)}+</span>
-        </div>
-      </div>
-
-      <aside className="fmap-panel fmap-panel--left">
-        <p className="fmap-panel__kicker">Page 6 · A correlational thought experiment</p>
-        <h2 className="fmap-panel__title">What if one pressure eased?</h2>
-        <p className="fmap-panel__desc">
-          An OLS model fits crime rate on the structural indicators from Page 4 across
-          {' '}{model?.observations.toLocaleString() ?? '4,653'} LSOAs (R² ={' '}
-          {model ? model.rSquared.toFixed(2) : '—'}). Pick an indicator and a proportional
-          reduction: the right map redraws each LSOA using the model's implied crime rate
-          under that scenario. Drag the divider to compare.
-        </p>
-
-        <div className="cf-control">
-          <div className="fmap-section-label">1 · Choose a lever</div>
-          <div className="fmap-var-list">
-            {LEVERS.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                className={`fmap-var-btn${lever === item.key ? ' active' : ''}`}
-                onClick={() => setLever(item.key)}
-              >
-                {item.label}
-              </button>
-            ))}
+        <div className="cf-page-intro__guide">
+          <div className="cf-page-intro__item">
+            <strong>Left map</strong>
+            Predicted crime rate after the selected pressure is hypothetically reduced in every LSOA.
           </div>
-          <p className="fmap-var-desc">{activeLever.description}</p>
+          <div className="cf-page-intro__item">
+            <strong>Right map</strong>
+            Model-implied reduction, largest where the selected indicator is both high locally
+            and positively associated with crime in the model.
+          </div>
+          <div className="cf-page-intro__item">
+            <strong>How to compare levers</strong>
+            A coefficient alone is not the whole story. The local reading combines the model
+            coefficient, the current indicator level, and the selected reduction percentage, so
+            a widespread pressure can matter even when its coefficient is smaller.
+          </div>
         </div>
+      </div>
 
-        <div className="cf-control">
-          <div className="fmap-section-label">2 · Proportional reduction</div>
-          <input
-            type="range"
-            min={5}
-            max={50}
-            step={5}
-            value={reductionPct}
-            onChange={(e) => setReductionPct(Number(e.target.value))}
-            className="cf-slider"
+      {/* Map area */}
+      <div className="fmap-map-area">
+
+        <div className="fmap-canvas">
+          <SliderCompareMap
+            data={data}
+            leftStyle={leftStyle}
+            rightStyle={rightStyle}
+            leftLabel={`Predicted rate | ${activeLever.shortLabel} -${reductionPct}%`}
+            rightLabel={`Model-implied drop | ${activeLever.shortLabel} -${reductionPct}%`}
+            onSelect={setSelectedLsoa}
+            tooltipFormatter={tooltipFormatter}
+            fillContainer
           />
-          <div className="cf-slider__readout">
-            <span>Every LSOA's {activeLever.label.toLowerCase()} × </span>
-            <strong>{(1 - reductionPct / 100).toFixed(2)}</strong>
-            <span> (−{reductionPct}%)</span>
+        </div>
+
+        {/* Left panel: controls + legends */}
+        <aside className="fmap-panel fmap-panel--left">
+          <div className="cf-control">
+            <div className="fmap-section-label">1. Choose a lever</div>
+            <div className="fmap-var-list">
+              {LEVERS.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={`fmap-var-btn${lever === item.key ? ' active' : ''}`}
+                  onClick={() => setLever(item.key)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <p className="fmap-var-desc">{activeLever.description}</p>
           </div>
-        </div>
 
-        <div className="fmap-method-card">
-          <strong className="fmap-method-card__title">Why these indicators are combined</strong>
-          <p className="fmap-method-card__body">
-            These indicators are combined because they capture different sides of
-            neighbourhood pressure rather than repeating the same idea. Crime rate
-            shows the immediate recorded pattern, while unemployment, renting,
-            health, and related measures describe the wider structural context.
-            Read together, they help compare places where several pressures overlap.
-          </p>
-        </div>
+          <div className="cf-control">
+            <div className="fmap-section-label">2. Proportional reduction</div>
+            <input
+              type="range"
+              min={10}
+              max={50}
+              step={5}
+              value={reductionPct}
+              onChange={(e) => setReductionPct(Number(e.target.value))}
+              className="cf-slider"
+            />
+            <div className="cf-slider__readout">
+              <span>Every LSOA's {activeLever.label.toLowerCase()} x </span>
+              <strong>{(1 - reductionPct / 100).toFixed(2)}</strong>
+              <span> (-{reductionPct}%)</span>
+            </div>
+          </div>
 
-        <p className="fmap-panel__note fmap-panel__note--inline">
-          Strictly correlational. The model describes how crime rates co-vary with
-          structural indicators across London — not what would happen if a policy
-          intervention changed one of them. Unobserved confounders are baked into β.
-        </p>
-        <div className="fmap-method-card fmap-method-card--bottom">
-          <strong className="fmap-method-card__title">How to read this page</strong>
-          <p className="fmap-method-card__body">
-            This page should be read as a comparative index rather than as a literal
-            forecast. A higher score means several pressures appear to align in the
-            same place. It is most useful for comparing combined pressure across
-            London, not for ranking exact future risk.
+          <div className="fmap-divider" />
+
+          <div className="cf-legend cf-legend--left">
+            <div className="cf-legend__title">Left map - predicted crime rate</div>
+            <div className="cf-legend__swatches">
+              {CRIME_PALETTE.map((color, i) => (
+                <span
+                  key={color}
+                  className="cf-legend__swatch"
+                  style={{ background: color }}
+                  aria-label={`bin ${i}`}
+                />
+              ))}
+            </div>
+            <div className="cf-legend__scale">
+              <span>0</span>
+              {CRIME_BIN_EDGES.map((edge) => (
+                <span key={edge}>{edge}</span>
+              ))}
+              <span>per 1k</span>
+            </div>
+          </div>
+
+          <p className="fmap-panel__note fmap-panel__note--inline">
+            Strictly correlational: this describes co-variation across London LSOAs,
+            not the causal effect of an intervention.
           </p>
-        </div>
-      </aside>
+        </aside>
 
       <aside className="fmap-panel fmap-panel--right">
         <p className="fmap-panel__kicker">Model readout</p>
 
         <div className="cf-stat">
-          <span className="cf-stat__label">β for {activeLever.label.toLowerCase()}</span>
+          <span className="cf-stat__label">Coefficient for {activeLever.label.toLowerCase()}</span>
           <strong className="cf-stat__value">
-            {activePredictor ? activePredictor.coefficient.toFixed(2) : '—'}
+            {activePredictor ? activePredictor.coefficient.toFixed(2) : 'No data'}
           </strong>
           <span className="cf-stat__hint">
-            crimes / 1,000 residents per +1pp in {activeLever.label.toLowerCase()}
+            crimes / 1,000 per +1 percentage-point rise, with other indicators held constant
           </span>
         </div>
 
-        <p className="fmap-panel__desc" style={{ fontSize: '0.78rem' }}>
-          Controlling for the other six structural indicators, a one-percentage-point
-          increase in {activeLever.label.toLowerCase()} is associated with{' '}
-          <strong>
-            {activePredictor && activePredictor.coefficient >= 0 ? '+' : ''}
-            {activeBetaAbs}
-          </strong>{' '}
-          crimes per 1,000 residents in the same quarter.
-        </p>
+        <div className="cf-stat">
+          <span className="cf-stat__label">London mean</span>
+          <strong className="cf-stat__value">
+            {activePredictor ? `${activePredictor.mean.toFixed(1)}%` : 'No data'}
+          </strong>
+          <span className="cf-stat__hint">
+            average {activeLever.label.toLowerCase()} level across London LSOAs
+          </span>
+        </div>
+
+        <div className="cf-stat">
+          <span className="cf-stat__label">
+            {selectedLsoa ? `Local sensitivity at -${reductionPct}%` : `At-mean sensitivity at -${reductionPct}%`}
+          </span>
+          {activePredictor ? (() => {
+            const localVal = selectedLsoa != null && typeof selectedLsoa[lever] === 'number'
+              ? (selectedLsoa[lever] as number)
+              : activePredictor.mean;
+            const beta = activePredictor.coefficient;
+            // Reducing the indicator by reductionPct% changes the prediction by beta * local value * scale.
+            const crimeChange = beta * (-localVal * reductionPct / 100);
+            const sign = crimeChange < 0 ? '-' : '+';
+            return (
+              <strong className={`cf-stat__value ${crimeChange < 0 ? 'cf-delta-neg' : 'cf-delta-pos'}`}>
+                {sign}{Math.abs(crimeChange).toFixed(1)}
+              </strong>
+            );
+          })() : <strong className="cf-stat__value">No data</strong>}
+          <span className="cf-stat__hint">
+            {selectedLsoa
+              ? `crimes / 1,000 at this LSOA (coefficient x local value x reduction%)`
+              : `crimes / 1,000 at a typical LSOA (coefficient x mean x reduction%)`}
+          </span>
+        </div>
+
+        {/* Crime type breakdown */}
+        {crimeTypeLookup && activePredictor && (() => {
+          const vBeta = crimeTypeLookup.violent[lever]?.coefficient ?? 0;
+          const pBeta = crimeTypeLookup.property[lever]?.coefficient ?? 0;
+          const localVal = selectedLsoa != null && typeof selectedLsoa[lever] === 'number'
+            ? (selectedLsoa[lever] as number)
+            : activePredictor.mean;
+          const scale = reductionPct / 100;
+          const vEffect = Math.abs(vBeta) * localVal * scale;
+          const pEffect = Math.abs(pBeta) * localVal * scale;
+          const vSign = vBeta > 0 ? '-' : '+';
+          const pSign = pBeta > 0 ? '-' : '+';
+          return (
+            <div className="cf-type-split">
+              <div className="fmap-section-label" style={{ marginBottom: '0.45rem' }}>
+                Crime type sensitivity
+              </div>
+              <div className="cf-type-split__row">
+                <span className="cf-type-split__dot" style={{ background: '#9b3ea8' }} />
+                <span className="cf-type-split__label">Violent crime</span>
+                <strong className={vBeta > 0 ? 'cf-delta-neg' : 'cf-delta-pos'}>
+                  {vSign}{vEffect.toFixed(1)}
+                </strong>
+              </div>
+              <div className="cf-type-split__row">
+                <span className="cf-type-split__dot" style={{ background: '#1d7db5' }} />
+                <span className="cf-type-split__label">Property crime</span>
+                <strong className={pBeta > 0 ? 'cf-delta-neg' : 'cf-delta-pos'}>
+                  {pSign}{pEffect.toFixed(1)}
+                </strong>
+              </div>
+              <p className="cf-type-split__hint">
+                crimes / 1,000 | {selectedLsoa ? 'local value' : 'London mean'} | -{reductionPct}%
+              </p>
+              <p className="cf-type-split__link">
+                Connects back to the crime-type mechanism section
+              </p>
+            </div>
+          );
+        })()}
 
         <div className="fmap-divider" />
         <p className="fmap-panel__kicker">London-wide effect</p>
@@ -479,15 +590,15 @@ const PriorityPlacesPage = () => {
                 <strong>
                   {simulated[selectedLsoa.code] != null
                     ? formatRate(simulated[selectedLsoa.code])
-                    : '—'}
+                    : 'No data'}
                 </strong>
               </div>
               <div>
                 <span>Implied drop</span>
                 <strong className="cf-delta-neg">
                   {scenario.reduction[selectedLsoa.code] != null
-                    ? `−${scenario.reduction[selectedLsoa.code].toFixed(1)}`
-                    : '—'}
+                    ? `-${scenario.reduction[selectedLsoa.code].toFixed(1)}`
+                    : 'No data'}
                 </strong>
               </div>
               <div>
@@ -495,7 +606,7 @@ const PriorityPlacesPage = () => {
                 <strong>
                   {typeof selectedLsoa[lever] === 'number'
                     ? `${(selectedLsoa[lever] as number).toFixed(1)}%`
-                    : '—'}
+                    : 'No data'}
                 </strong>
               </div>
             </div>
@@ -508,23 +619,39 @@ const PriorityPlacesPage = () => {
               How to read this local result
             </strong>
             <p className="fmap-method-card__body">
-              This local result should be read as a comparison, not as a literal
-              forecast. A larger implied drop does not mean that changing one factor
-              in isolation would automatically produce the same reduction on the
-              ground. It suggests that this LSOA sits in a part of London where the
-              chosen indicator tends to co-vary with higher crime in the fitted
+              Read this local result as model sensitivity, not as a promise of policy impact.
+              A larger implied drop means the selected LSOA sits in a part of London where the
+              chosen indicator is both high and strongly associated with crime in the fitted
               model, even after the other structural variables are held constant.
             </p>
           </div>
         ) : null}
 
-        <div className="fmap-takeaway">
-          The coefficients say high-rent, high-youth, high-ill-health neighbourhoods
-          co-occur with higher crime after controlling for each other. Moving any
-          single axis moves the prediction only a little — compound pressures, not
-          any one lever, define the crime gradient.
+        <div className="fmap-divider" />
+        <div className="cf-legend cf-legend--right">
+          <div className="cf-legend__title">Right map - model-implied reduction (crimes / 1,000)</div>
+          <div className="cf-legend__swatches">
+            {REDUCTION_PALETTE.map((color, i) => (
+              <span
+                key={color}
+                className="cf-legend__swatch"
+                style={{ background: color }}
+                aria-label={`reduction bin ${i}`}
+              />
+            ))}
+          </div>
+          <div className="cf-legend__scale">
+            <span>0</span>
+            {fixedReductionEdges.edges.map((edge, i) => (
+              <span key={i}>{edge.toFixed(1)}</span>
+            ))}
+            <span>{fixedReductionEdges.max.toFixed(1)}+</span>
+          </div>
         </div>
+
       </aside>
+
+      </div>{/* end fmap-map-area */}
     </div>
   );
 };
