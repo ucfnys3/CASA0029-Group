@@ -203,10 +203,6 @@ const AboutPage = () => {
             https://www.ons.gov.uk/census (Accessed: 15 April 2026).
           </p>
           <p>
-            Sharma, R. K. (1998) <em>Social Disorganization</em>. New Delhi: Atlantic Publishers
-            &amp; Distributors.
-          </p>
-          <p>
             Zhou, Y., Wang, F. and Zhou, S. (2023) 'The Spatial Patterns of the Crime Rate in
             London and Its Socio-Economic Influence Factors', <em>Social Sciences</em>, 12(6),
             p. 340. doi: 10.3390/socsci12060340.
