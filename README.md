@@ -308,8 +308,11 @@ served to the browser.
 
 ### Data hooks (`src/hooks/`)
 
-`useJsonData.ts` — fetches any JSON/GeoJSON from `public/data/`, applies the base path,
-and returns `{ data, loading, error }`. All pages use this hook for their data calls.
+`useJsonData.ts` — the single data-fetching interface used by all pages. Internally it
+maintains a module-level `Promise` cache so the same file is fetched at most once per
+session regardless of how many components request it. Applies the Vite base path via
+`withBase()` so the same path strings work both in local development and under a GitHub
+Pages subpath. Returns `{ data, loading, error }` for each call site.
 
 ## Interpretation Notes
 

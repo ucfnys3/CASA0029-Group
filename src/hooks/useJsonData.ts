@@ -9,7 +9,7 @@ type LoadState<T> = {
 
 const jsonCache = new Map<string, Promise<unknown>>();
 
-export const loadJson = async <T,>(path: string): Promise<T> => {
+const loadJson = async <T,>(path: string): Promise<T> => {
   const resolvedPath = withBase(path);
   if (!jsonCache.has(resolvedPath)) {
     jsonCache.set(
