@@ -17,6 +17,7 @@ SOURCE_ROOT = Path(
 )
 OUTPUT_ROOT = PROJECT_ROOT / "public" / "data"
 INCIDENT_OUTPUT = OUTPUT_ROOT / "incidents"
+GENERATED_ROOT = PROJECT_ROOT / "data" / "generated"
 LONDON_LSOA_2021_BOUNDARY_FILE = "London_LSOA_2021_Boundaries.geojson"
 LSOA_2021_BOUNDARY_GLOB = (
     "Lower_layer_Super_Output_Areas_December_2021_Boundaries_EW_BSC*.geojson"
@@ -26,6 +27,7 @@ LSOA_2021_BOUNDARY_GLOB = (
 def ensure_dirs() -> None:
     OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
     INCIDENT_OUTPUT.mkdir(parents=True, exist_ok=True)
+    GENERATED_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 def read_json(path: Path) -> Any:
@@ -1175,7 +1177,7 @@ def compute_research_stats() -> None:
 
     correlations.sort(key=lambda item: abs(item["spearman"]), reverse=True)
     write_json(
-        OUTPUT_ROOT / "research_stats.json",
+        GENERATED_ROOT / "research_stats.json",
         {
             "correlations": correlations,
             "meta": {
@@ -1225,7 +1227,7 @@ def main() -> None:
 
     compute_research_stats()
     print(f"Prepared runtime data in {OUTPUT_ROOT}")
-    print(f"Prepared research stats in {OUTPUT_ROOT / 'research_stats.json'}")
+    print(f"Prepared research stats in {GENERATED_ROOT / 'research_stats.json'}")
 
 
 if __name__ == "__main__":

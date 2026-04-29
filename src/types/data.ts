@@ -25,8 +25,6 @@ export interface LsoaProperties {
   recentMigration: number | null;
   youthShare: number | null;
   populationDensity: number | null;
-  newMigrantShare: number | null;
-  jobDensity: number | null;
   crimeRateScore: number | null;
   unemploymentScore: number | null;
   privateRentingScore: number | null;
@@ -35,18 +33,11 @@ export interface LsoaProperties {
   recentMigrationScore: number | null;
   youthShareScore: number | null;
   populationDensityScore: number | null;
-  priorityIndex: number | null;
-  priorityBand: string;
   compositeVulnerabilityScore: number | null;
   compositeVulnerabilityBand: string;
   bivariateBin: number | null;
   bivariateCrimeBin: number | null;
   bivariateVulnBin: number | null;
-  archetype: string | null;
-  archetypeDominantScore: number | null;
-  crimeDeprivationOverlap: number | null;
-  crimeRentingOverlap: number | null;
-  crimeUnemploymentOverlap: number | null;
   predictedCrimeRate: number | null;
   violentRate: number | null;
   violentRateScore: number | null;
@@ -84,20 +75,6 @@ export interface CounterfactualModel {
 export type BoroughGeoJson = FeatureCollection<Geometry, BoroughProperties>;
 export type LsoaGeoJson = FeatureCollection<Geometry, LsoaProperties>;
 
-export interface RankedPlace {
-  code: string;
-  name: string;
-  borough: string;
-  priorityIndex: number;
-  crimeRate: number;
-  unemployment: number;
-  privateRenting: number;
-  deprivation: number;
-  noQualifications: number;
-  recentMigration: number;
-  youthShare: number;
-}
-
 export interface OverviewMonthTotal {
   month: string;
   label: string;
@@ -116,13 +93,6 @@ export interface BoroughRanking {
 export interface CategoryTotal {
   name: string;
   count: number;
-}
-
-export interface HomeSummary {
-  q4IncidentCount: number;
-  topDecileCrimeShare: number;
-  lsoaCount: number;
-  completeStructuralCount: number;
 }
 
 export interface OverviewSummary {
@@ -155,18 +125,9 @@ export interface HotspotSummary {
 }
 
 export interface SummaryData {
-  home: HomeSummary;
   overview: OverviewSummary;
-  structural: {
-    topCrimeRatePlaces: Array<{
-      name: string;
-      borough: string;
-      crimeRate: number;
-      crimeCount: number;
-    }>;
-    priorityPlaces: RankedPlace[];
-  };
   hotspots: HotspotSummary;
+  [key: string]: unknown;
 }
 
 export interface ChartPoint {

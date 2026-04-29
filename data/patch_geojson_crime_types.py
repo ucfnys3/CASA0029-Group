@@ -15,7 +15,7 @@ BASE   = os.path.dirname(os.path.abspath(__file__))
 ROOT   = os.path.dirname(BASE)
 PUB    = os.path.join(ROOT, "public", "data")
 
-CT_JSON  = os.path.join(PUB, "crime_types.json")
+CT_JSON  = os.path.join(BASE, "generated", "crime_types.json")
 GEO_JSON = os.path.join(PUB, "lsoa.geojson")
 CORR_OUT = os.path.join(PUB, "crime_correlations.json")
 
@@ -61,7 +61,7 @@ with open(CORR_OUT, "w", encoding="utf-8") as f:
 size2 = os.path.getsize(CORR_OUT)/1024
 print(f"  crime_correlations.json written ({size2:.0f} KB)")
 
-# 4. delete the bulky crime_types.json
-os.remove(CT_JSON)
-print("  crime_types.json removed (no longer needed)")
+# 4. keep the bulky intermediate file for reproducibility.
+# It is generated under data/generated and is not fetched by the frontend.
+print("  crime_types.json kept under data/generated as an intermediate reproducibility file")
 print("Done.")

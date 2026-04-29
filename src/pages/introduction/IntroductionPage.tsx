@@ -274,6 +274,11 @@ const IntroductionPage = () => {
           title="Scenario Simulation"
           description="A correlational sensitivity test showing how fitted crime predictions respond to lower pressure levels."
         />
+        <StoryCard
+          href="/analysis-summary"
+          title="Summary"
+          description="A final synthesis bringing the crime baseline, structural pressure, crime-type mechanisms, and scenario sensitivity together."
+        />
       </section>
 
       <Takeaway

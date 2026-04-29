@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "prepare-data": "python scripts/prepare_data.py"
+    "prepare-data": "python scripts/prepare_data.py",
+    "prepare-crime-types": "python data/build_crime_types.py && python data/patch_geojson_crime_types.py && python data/patch_subindices.py && python data/build_crime_type_models.py",
+    "prepare-all-data": "npm run prepare-data && npm run prepare-crime-types"
   },
   "dependencies": {
     "@deck.gl/aggregation-layers": "^9.3.1",

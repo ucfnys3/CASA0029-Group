@@ -35,7 +35,7 @@ const App = () => {
       <header className={isHome ? 'site-header site-header--cover' : 'site-header'}>
         <div className="shell-width site-header__inner">
           <div className="brand-block">
-            <span className="brand-block__kicker">CASA0029 group prototype</span>
+            <span className="brand-block__kicker">CASA0029 group19 project</span>
             <NavLink to="/" className="brand-block__title">
               London Crime Inequality Atlas
             </NavLink>

@@ -11,7 +11,7 @@ const HomePage = () => (
     <div className="cover-page__veil" />
 
     <div className="cover-page__content">
-      <p className="cover-page__kicker">CASA0029 group prototype</p>
+      <p className="cover-page__kicker">CASA0029 group19 project</p>
       <h1>London Crime Inequality Atlas</h1>
       <p>
         A map-led story about where crime concentrates, why neighbourhood vulnerability matters,
@@ -21,7 +21,7 @@ const HomePage = () => (
         <Link to="/introduction" className="cover-page__button cover-page__button--primary">
           Enter the atlas
         </Link>
-        <Link to="/borough-crime-situation" className="cover-page__button">
+        <Link to="/crime-map" className="cover-page__button">
           Start with the map
         </Link>
       </div>

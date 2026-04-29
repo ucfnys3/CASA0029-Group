@@ -4,7 +4,7 @@ build_crime_types.py
 Reads MPS LSOA Level Crime (Historical).csv for 2021 (full year),
 splits into violent / property crime, computes per-1000 rates,
 runs Spearman correlations with structural indicators from lsoa.geojson,
-and writes public/data/crime_types.json for the new Crime Type page.
+and writes data/generated/crime_types.json as an intermediate reproducibility file.
 
 Run from the project root:
     py -3 data/build_crime_types.py
@@ -19,7 +19,7 @@ ROOT = os.path.dirname(BASE)
 
 MPS_CSV   = os.path.join(BASE, "MPS LSOA Level Crime (Historical).csv")
 GEOJSON   = os.path.join(ROOT, "public", "data", "lsoa.geojson")
-OUT       = os.path.join(ROOT, "public", "data", "crime_types.json")
+OUT       = os.path.join(BASE, "generated", "crime_types.json")
 
 # ── crime category mapping ─────────────────────────────────────────────────
 VIOLENT_CATS  = {"VIOLENCE AGAINST THE PERSON", "ROBBERY"}
@@ -32,14 +32,14 @@ INDICATORS = [
     ("deprivation",          "Deprivation"),
     ("unemployment",         "Unemployment"),
     ("noQualifications",     "No qualifications"),
-    ("youthShare",           "Youth share (16–24)"),
+    ("youthShare",           "Age 20-24"),
     ("privateRenting",       "Private renting"),
     ("recentMigration",      "Recent migration"),
     ("populationDensity",    "Population density"),
 ]
 
 # ── 1. aggregate 2021 crime counts per LSOA by group ─────────────────────
-print("Reading MPS CSV …")
+print("Reading MPS CSV...")
 violent_count  = defaultdict(int)
 property_count = defaultdict(int)
 
@@ -58,7 +58,7 @@ print(f"  LSOAs with violent data  : {len(violent_count)}")
 print(f"  LSOAs with property data : {len(property_count)}")
 
 # ── 2. load lsoa.geojson for population + structural indicators ────────────
-print("Loading lsoa.geojson …")
+print("Loading lsoa.geojson...")
 with open(GEOJSON, encoding="utf-8") as f:
     geojson = json.load(f)
 
@@ -226,4 +226,4 @@ with open(OUT, "w", encoding="utf-8") as f:
     json.dump(output, f, separators=(",", ":"))
 
 size_kb = os.path.getsize(OUT) / 1024
-print(f"\n✓ Written: {OUT}  ({size_kb:.0f} KB)")
+print(f"\nWritten: {OUT}  ({size_kb:.0f} KB)")
