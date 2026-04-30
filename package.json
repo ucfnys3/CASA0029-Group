@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "prepare-data": "python scripts/prepare_data.py",
     "prepare-crime-types": "python data/build_crime_types.py && python data/patch_geojson_crime_types.py && python data/patch_subindices.py && python data/build_crime_type_models.py",
-    "prepare-all-data": "npm run prepare-data && npm run prepare-crime-types"
+    "prepare-all-data": "npm run prepare-data && npm run prepare-crime-types",
+    "deploy": "cross-env VITE_BASE_PATH=/CASA0029-Group/ vite build && gh-pages -d dist"
   },
   "dependencies": {
     "@deck.gl/aggregation-layers": "^9.3.1",
@@ -30,6 +31,8 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "cross-env": "^10.1.0",
+    "gh-pages": "^6.3.0",
     "typescript": "^5.7.2",
     "vite": "^5.4.11"
   }
