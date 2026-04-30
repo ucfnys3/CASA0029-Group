@@ -6,13 +6,14 @@ import {
 import StoryCard from '../../components/StoryCard';
 import Takeaway from '../../components/Takeaway';
 import { useJsonData } from '../../hooks/useJsonData';
+import { withBase } from '../../lib/basePath';
 import type { BackgroundChartsData } from '../../types/data';
 
 /* ── Static card data ───────────────────────────────────────── */
 
 const problemCards = [
   {
-    img: '/images/intro/crime-rising.jpg',
+    img: withBase('/images/intro/crime-rising.jpg'),
     alt: 'London street at night',
     stat: 'Top 15',
     statLabel: 'European cities by crime rate',
@@ -22,7 +23,7 @@ const problemCards = [
     source: 'Evening Standard, 2024; Mayor of London data',
   },
   {
-    img: '/images/intro/trust-fallen.jpg',
+    img: withBase('/images/intro/trust-fallen.jpg'),
     alt: 'Londoners and police',
     stat: '45%',
     statLabel: 'public confidence in 2025',
@@ -32,7 +33,7 @@ const problemCards = [
     source: 'London Datastore, 2025',
   },
   {
-    img: '/images/intro/policing-gap.jpg',
+    img: withBase('/images/intro/policing-gap.jpg'),
     alt: 'Metropolitan Police patrol',
     stat: 'Gap',
     statLabel: 'More policing, same results',
@@ -45,7 +46,7 @@ const problemCards = [
 
 const theoryCards = [
   {
-    img: '/images/intro/social-disorg.jpg',
+    img: withBase('/images/intro/social-disorg.jpg'),
     alt: 'London council estate',
     label: 'Theory 01',
     title: 'Social Disorganisation Theory',
@@ -55,7 +56,7 @@ const theoryCards = [
     href: 'https://nij.ojp.gov/library/publications/community-structure-and-crime-testing-social-disorganization-theory',
   },
   {
-    img: '/images/intro/routine-activity.jpg',
+    img: withBase('/images/intro/routine-activity.jpg'),
     alt: 'London tube commuters at night',
     label: 'Theory 02',
     title: 'Routine Activity Theory',
@@ -65,7 +66,7 @@ const theoryCards = [
     href: 'https://ojp.gov/ncjrs/virtual-library/abstracts/social-change-and-crime-rate-trends-routine-activity-approach',
   },
   {
-    img: '/images/intro/structural-vuln.jpg',
+    img: withBase('/images/intro/structural-vuln.jpg'),
     alt: 'London inequality and housing',
     label: 'Our Framework',
     title: 'Structural Pressure Framework',

@@ -1,30 +1,32 @@
+import { withBase } from '../../lib/basePath';
+
 const overviewFigures = [
   {
     label: 'Crime Map',
-    src: '/images/summary/crime-map.png',
+    src: withBase('/images/summary/crime-map.png'),
   },
   {
     label: '3D Crime Analysis',
-    src: '/images/summary/3d-analysis.png',
+    src: withBase('/images/summary/3d-analysis.png'),
   },
   {
     label: 'Structural Pressure',
-    src: '/images/summary/vulnerability.png',
+    src: withBase('/images/summary/vulnerability.png'),
   },
   {
     label: 'Crime x Pressure Matrix',
-    src: '/images/summary/structural-analysis.png',
+    src: withBase('/images/summary/structural-analysis.png'),
   },
 ] as const;
 
 const mechanismFigures = [
   {
     label: 'Crime-Type Mechanisms',
-    src: '/images/summary/crime-types.png',
+    src: withBase('/images/summary/crime-types.png'),
   },
   {
     label: 'Scenario Simulation',
-    src: '/images/summary/scenario.png',
+    src: withBase('/images/summary/scenario.png'),
   },
 ] as const;
 
