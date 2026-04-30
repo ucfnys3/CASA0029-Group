@@ -1,0 +1,5 @@
+node_modules/
+.claude/
+dist/
+data/png/
+data/generated/
