@@ -4,6 +4,8 @@ CASA0029 Group19 project: an interactive LSOA-level atlas exploring how recorded
 crime, structural neighbourhood pressure, crime-type mechanisms, and model
 sensitivity intersect across London.
 
+**Live site:** https://ucfnys3.github.io/CASA0029-Group/
+
 ## Project Structure
 
 The application is a static React/Vite site. It has no live backend at runtime:
